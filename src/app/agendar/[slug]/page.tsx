@@ -89,13 +89,13 @@ export default function AgendarPage() {
         const tel = tenant.telefone.replace(/\D/g, "");
         const msg = encodeURIComponent(
           `🚗 *Novo agendamento!*\n\n` +
-          `👤 Cliente: ${nome.trim()}\n` +
-          `📱 Telefone: ${telefone.trim()}\n` +
-          `🔧 Serviço: ${servicoSel?.nome}\n` +
-          `📅 Data: ${format(parseISO(data), "d/MM/yyyy")}\n` +
-          `🕐 Horário: ${hora}\n` +
-          `🚘 Veículo: ${placa || "-"} ${modelo || ""} ${cor || ""}\n` +
-          `${obs ? `📝 Obs: ${obs}` : ""}`
+          `*Cliente:* ${nome.trim()}\n` +
+          `*Telefone:* ${telefone.trim()}\n` +
+          `*Servico:* ${servicoSel?.nome}\n` +
+          `*Data:* ${format(parseISO(data), "d/MM/yyyy")}\n` +
+          `*Horario:* ${hora}\n` +
+          `*Veiculo:* ${placa || "-"} ${modelo || ""} ${cor || ""}` +
+          `${obs ? `\n*Obs:* ${obs}` : ""}`
         );
         window.open(`https://wa.me/55${tel}?text=${msg}`, "_blank");
       }
