@@ -105,8 +105,34 @@ export default function ConfiguracoesPage() {
           </div>
         </div>
 
-        <div className="mt-4 p-4 bg-slate-100 rounded-xl text-xs text-muted">
-          <strong>Subdomínio:</strong> {tenant?.slug ?? "—"}.lavaapp.com.br
+        {/* Link de agendamento */}
+        <div className="mt-4 bg-white border border-slate-200 rounded-xl p-5">
+          <h3 className="font-heading font-semibold text-sm text-ink mb-1">Link de Agendamento</h3>
+          <p className="text-xs text-muted mb-3">Compartilhe este link para seus clientes agendarem online</p>
+          <div className="flex items-center gap-2">
+            <input
+              readOnly
+              value={`https://enceradoapp.vercel.app/agendar/${tenant?.slug ?? ""}`}
+              className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-xs bg-slate-50 outline-none"
+            />
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`https://enceradoapp.vercel.app/agendar/${tenant?.slug ?? ""}`);
+                toast.success("Link copiado!");
+              }}
+              className="shrink-0 bg-brand text-black text-xs font-semibold px-3 py-2 rounded-lg hover:bg-brand-dark transition"
+            >
+              Copiar
+            </button>
+          </div>
+          <a
+            href={`https://enceradoapp.vercel.app/agendar/${tenant?.slug ?? ""}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-brand hover:underline mt-2 block"
+          >
+            Abrir página →
+          </a>
         </div>
       </div>
 
