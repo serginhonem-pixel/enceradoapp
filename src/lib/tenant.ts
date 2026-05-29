@@ -20,15 +20,15 @@ export function getTenantSlug(hostname: string): string | null {
     return null;
   }
 
+  // Vercel deployments nunca são tenants
+  if (host.endsWith(".vercel.app")) {
+    return null;
+  }
+
   const parts = host.split(".");
   // precisa ter pelo menos subdomínio.domínio.tld
   if (parts.length >= 3) {
     return parts[0];
-  }
-
-  // Vercel preview: slug-lavaapp-xxx.vercel.app → trata como demo
-  if (host.endsWith(".vercel.app")) {
-    return null;
   }
 
   return null;
