@@ -48,8 +48,8 @@ export function Sidebar({ onSignOut }: SidebarProps) {
               <Image src={tenant.logoUrl} alt="logo" fill className="object-cover" />
             </div>
           ) : (
-            <div className="w-8 h-8 rounded-lg bg-brand flex items-center justify-center text-white text-base shrink-0">
-              🚗
+            <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0">
+              <Image src="/logo.jpeg" alt="logo" width={32} height={32} className="object-cover w-full h-full" />
             </div>
           )}
           <span className="font-heading font-bold text-white text-[1.05rem] truncate">

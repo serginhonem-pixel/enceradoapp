@@ -130,7 +130,9 @@ export default function AgendarPage() {
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-4 py-4">
         <div className="max-w-lg mx-auto flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-brand flex items-center justify-center text-xl shrink-0">🚗</div>
+          <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0">
+              <img src={tenant.logoUrl || "/logo.jpeg"} alt="logo" className="w-full h-full object-cover" />
+            </div>
           <div>
             <p className="font-heading font-bold text-ink">{tenant.nome}</p>
             {tenant.telefone && <p className="text-xs text-muted">{tenant.telefone}</p>}

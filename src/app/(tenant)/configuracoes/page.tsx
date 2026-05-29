@@ -57,25 +57,10 @@ export default function ConfiguracoesPage() {
         <div className="bg-white rounded-xl border border-slate-200 p-5 mb-5">
           <h3 className="font-heading font-semibold text-sm text-ink mb-4">Logo do Estabelecimento</h3>
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden bg-slate-50">
-              {tenant?.logoUrl ? (
-                <Image src={tenant.logoUrl} alt="logo" width={64} height={64} className="object-cover" />
-              ) : (
-                <span className="text-2xl">🚗</span>
-              )}
+            <div className="w-16 h-16 rounded-xl overflow-hidden border border-slate-200">
+              <Image src={tenant?.logoUrl || "/logo.jpeg"} alt="logo" width={64} height={64} className="object-cover w-full h-full" />
             </div>
-            <div>
-              <button
-                onClick={() => fileRef.current?.click()}
-                disabled={uploading}
-                className="flex items-center gap-2 border border-slate-200 text-sm font-medium px-4 py-2 rounded-lg hover:bg-slate-50 transition disabled:opacity-50"
-              >
-                <Upload size={13} />
-                {uploading ? "Enviando..." : "Trocar logo"}
-              </button>
-              <p className="text-xs text-muted mt-1">PNG ou JPG. Recomendado: 200×200px</p>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogo} />
-            </div>
+            <p className="text-xs text-muted">Upload de logo disponível em breve.</p>
           </div>
         </div>
 
