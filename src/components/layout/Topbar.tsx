@@ -82,9 +82,19 @@ export function Topbar({ title, onMenuClick, actions }: TopbarProps) {
             <div className="absolute right-0 top-10 w-80 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden">
               <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
                 <p className="font-semibold text-sm text-ink">Novos agendamentos</p>
-                {notifs.length > 0 && (
-                  <span className="text-xs bg-red-100 text-red-600 font-bold px-2 py-0.5 rounded-full">{notifs.length}</span>
-                )}
+                <div className="flex items-center gap-2">
+                  {notifs.length > 0 && (
+                    <span className="text-xs bg-red-100 text-red-600 font-bold px-2 py-0.5 rounded-full">{notifs.length}</span>
+                  )}
+                  {notifs.length > 0 && (
+                    <button
+                      onClick={() => setNotifs([])}
+                      className="text-xs text-muted hover:text-slate-600 transition"
+                    >
+                      Limpar
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
                 {notifs.length === 0 ? (
