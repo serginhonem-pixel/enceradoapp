@@ -95,7 +95,7 @@ export function Topbar({ title, onMenuClick, actions }: TopbarProps) {
                     <button
                       onClick={() => {
                         const lidas = getLidas();
-                        const novasLidas = [...new Set([...lidas, ...notifs.map(n => n.id)])];
+                        const novasLidas = Array.from(new Set([...lidas, ...notifs.map(n => n.id)]));
                         localStorage.setItem("notifs_lidas", JSON.stringify(novasLidas));
                         setNotifs([]);
                       }}
