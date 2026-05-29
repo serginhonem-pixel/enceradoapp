@@ -101,33 +101,64 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
 function BottomNav({ onSignOut }: { onSignOut: () => void }) {
   const pathname = usePathname();
   const { tenant } = useTenant();
+  const [maisAberto, setMaisAberto] = useState(false);
   const isSub = typeof window !== "undefined" && window.location.hostname.split(".").length >= 3;
   const p = (path: string) => isSub ? path : `${path}?tenant=${tenant?.slug ?? ""}`;
 
-  const items = [
-    { href: "/dashboard",   icon: LayoutDashboard, label: "Início" },
-    { href: "/atendimentos", icon: ClipboardList,  label: "OS" },
-    { href: "/clientes",    icon: Users,           label: "Clientes" },
-    { href: "/servicos",    icon: Wrench,          label: "Serviços" },
-    { href: "/relatorios",  icon: BarChart2,       label: "Mais" },
+  const principais = [
+    { href: "/dashboard",    icon: LayoutDashboard, label: "Início" },
+    { href: "/atendimentos", icon: ClipboardList,   label: "OS" },
+    { href: "/clientes",     icon: Users,           label: "Clientes" },
+    { href: "/servicos",     icon: Wrench,          label: "Serviços" },
+  ];
+
+  const extras = [
+    { href: "/produtos",     icon: "📦", label: "Produtos" },
+    { href: "/custos",       icon: "💲", label: "Custos Fixos" },
+    { href: "/fechamento",   icon: "📊", label: "Fechamento" },
+    { href: "/relatorios",   icon: "📈", label: "Relatórios" },
+    { href: "/configuracoes",icon: "⚙️", label: "Configurações" },
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-ink border-t border-white/10 flex">
-      {items.map(({ href, icon: Icon, label }) => {
-        const active = pathname === href || pathname.startsWith(href + "/");
-        return (
-          <Link key={href} href={p(href)} className={`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition ${active ? "text-brand" : "text-white/40 hover:text-white/70"}`}>
-            <Icon size={20} />
-            <span className="text-[0.6rem] font-medium">{label}</span>
-          </Link>
-        );
-      })}
-      <button onClick={onSignOut} className="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-white/40 hover:text-red-400 transition">
-        <LogOut size={20} />
-        <span className="text-[0.6rem] font-medium">Sair</span>
-      </button>
-    </nav>
+    <>
+      {/* Menu "Mais" */}
+      {maisAberto && (
+        <div className="md:hidden fixed inset-0 z-40" onClick={() => setMaisAberto(false)}>
+          <div className="absolute bottom-16 left-0 right-0 bg-ink border-t border-white/10 p-3 grid grid-cols-3 gap-2" onClick={e => e.stopPropagation()}>
+            {extras.map(({ href, icon, label }) => (
+              <Link key={href} href={p(href)} onClick={() => setMaisAberto(false)}
+                className="flex flex-col items-center gap-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition">
+                <span className="text-xl">{icon}</span>
+                <span className="text-[0.65rem] text-white/70 font-medium">{label}</span>
+              </Link>
+            ))}
+            <button onClick={() => { setMaisAberto(false); onSignOut(); }}
+              className="flex flex-col items-center gap-1 py-3 rounded-xl bg-white/5 hover:bg-red-500/20 transition">
+              <LogOut size={20} className="text-red-400" />
+              <span className="text-[0.65rem] text-red-400 font-medium">Sair</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-ink border-t border-white/10 flex">
+        {principais.map(({ href, icon: Icon, label }) => {
+          const active = pathname === href || pathname.startsWith(href + "/");
+          return (
+            <Link key={href} href={p(href)} className={`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition ${active ? "text-brand" : "text-white/40"}`}>
+              <Icon size={20} />
+              <span className="text-[0.6rem] font-medium">{label}</span>
+            </Link>
+          );
+        })}
+        <button onClick={() => setMaisAberto(m => !m)}
+          className={`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition ${maisAberto ? "text-brand" : "text-white/40"}`}>
+          <BarChart2 size={20} />
+          <span className="text-[0.6rem] font-medium">Mais</span>
+        </button>
+      </nav>
+    </>
   );
 }
 
