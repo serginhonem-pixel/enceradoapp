@@ -7,7 +7,20 @@ import { ptBR } from "date-fns/locale";
 import toast, { Toaster } from "react-hot-toast";
 import type { Tenant, Servico } from "@/types";
 
-const HORARIOS = ["07:00","07:30","08:00","08:30","09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00"];
+function gerarHorarios(inicio: string, fim: string, intervalo: number): string[] {
+  const slots: string[] = [];
+  const [ih, im] = inicio.split(":").map(Number);
+  const [fh, fm] = fim.split(":").map(Number);
+  let cur = ih * 60 + im;
+  const end = fh * 60 + fm;
+  while (cur < end) {
+    const h = Math.floor(cur / 60).toString().padStart(2, "0");
+    const m = (cur % 60).toString().padStart(2, "0");
+    slots.push(`${h}:${m}`);
+    cur += intervalo;
+  }
+  return slots;
+}
 
 type Step = "servico" | "data" | "info" | "sucesso";
 
@@ -59,9 +72,23 @@ export default function AgendarPage() {
 
   const servicoSel = servicos.find(s => s.id === servicoId);
 
-  // Próximos 30 dias (excluindo hoje)
+  // Próximos 30 dias filtrando pelos dias abertos
+  const horariosTenant = tenant?.horarios as Record<string, { aberto: boolean; inicio: string; fim: string }> | undefined;
+  const intervaloTenant = tenant?.intervaloAgendamento ?? 30;
+
   const diasDisponiveis = Array.from({ length: 30 }, (_, i) => addDays(new Date(), i + 1))
-    .filter(d => d.getDay() !== 0); // remove domingos
+    .filter(d => {
+      const diaSemana = d.getDay().toString();
+      if (!horariosTenant) return d.getDay() !== 0;
+      return horariosTenant[diaSemana]?.aberto ?? false;
+    });
+
+  const horariosDoDia = data ? (() => {
+    const diaSemana = parseISO(data).getDay().toString();
+    const h = horariosTenant?.[diaSemana];
+    if (!h?.aberto) return [];
+    return gerarHorarios(h.inicio, h.fim, intervaloTenant);
+  })() : [];
 
   async function handleConfirmar() {
     if (!tenant || !servicoSel) return;
@@ -223,7 +250,7 @@ export default function AgendarPage() {
               <>
                 <p className="text-xs font-semibold text-ink-3 uppercase tracking-wide mb-3">Horários disponíveis</p>
                 <div className="grid grid-cols-4 gap-2">
-                  {HORARIOS.map(h => {
+                  {horariosDoDia.map(h => {
                     const ocupado = horariosOcupados.includes(h);
                     const sel = hora === h;
                     return (

@@ -1,29 +1,64 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useTenant } from "@/hooks/useTenant";
 import { updateTenant } from "@/lib/firestore";
-import { storage } from "@/lib/firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Topbar } from "@/components/layout/Topbar";
-import { Upload } from "lucide-react";
 import toast from "react-hot-toast";
 import Image from "next/image";
+import type { HorarioFuncionamento } from "@/types";
+
+const DIAS = [
+  { key: "0", label: "Domingo" },
+  { key: "1", label: "Segunda" },
+  { key: "2", label: "Terça" },
+  { key: "3", label: "Quarta" },
+  { key: "4", label: "Quinta" },
+  { key: "5", label: "Sexta" },
+  { key: "6", label: "Sábado" },
+];
+
+const HORARIOS_OPTS = Array.from({ length: 27 }, (_, i) => {
+  const total = 6 * 60 + i * 30;
+  const h = Math.floor(total / 60).toString().padStart(2, "0");
+  const m = (total % 60).toString().padStart(2, "0");
+  return `${h}:${m}`;
+});
+
+const HORARIO_PADRAO: HorarioFuncionamento = { aberto: true, inicio: "08:00", fim: "18:00" };
+const HORARIO_FECHADO: HorarioFuncionamento = { aberto: false, inicio: "08:00", fim: "18:00" };
+
+const DEFAULT_HORARIOS: Record<string, HorarioFuncionamento> = {
+  "0": { ...HORARIO_FECHADO },
+  "1": { ...HORARIO_PADRAO },
+  "2": { ...HORARIO_PADRAO },
+  "3": { ...HORARIO_PADRAO },
+  "4": { ...HORARIO_PADRAO },
+  "5": { ...HORARIO_PADRAO },
+  "6": { aberto: true, inicio: "08:00", fim: "14:00" },
+};
 
 export default function ConfiguracoesPage() {
   const { tenant } = useTenant();
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
   const [endereco, setEndereco] = useState("");
+  const [horarios, setHorarios] = useState<Record<string, HorarioFuncionamento>>(DEFAULT_HORARIOS);
+  const [intervalo, setIntervalo] = useState(30);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [savingHorarios, setSavingHorarios] = useState(false);
 
   useEffect(() => {
     if (!tenant) return;
     setNome(tenant.nome);
     setTelefone(tenant.telefone ?? "");
     setEndereco(tenant.endereco ?? "");
+    if (tenant.horarios) setHorarios(tenant.horarios as Record<string, HorarioFuncionamento>);
+    if (tenant.intervaloAgendamento) setIntervalo(tenant.intervaloAgendamento);
   }, [tenant]);
+
+  function updateHorario(dia: string, patch: Partial<HorarioFuncionamento>) {
+    setHorarios(h => ({ ...h, [dia]: { ...h[dia], ...patch } }));
+  }
 
   async function handleSave() {
     if (!tenant) return;
@@ -35,26 +70,23 @@ export default function ConfiguracoesPage() {
     finally { setSaving(false); }
   }
 
-  async function handleLogo(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file || !tenant || !storage) return;
-    setUploading(true);
+  async function handleSaveHorarios() {
+    if (!tenant) return;
+    setSavingHorarios(true);
     try {
-      const storageRef = ref(storage, `tenants/${tenant.id}/logo`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-      await updateTenant(tenant.id, { logoUrl: url });
-      toast.success("Logo atualizada! Recarregue a página.");
-    } catch { toast.error("Erro ao enviar logo"); }
-    finally { setUploading(false); }
+      await updateTenant(tenant.id, { horarios, intervaloAgendamento: intervalo });
+      toast.success("Horários salvos!");
+    } catch { toast.error("Erro ao salvar"); }
+    finally { setSavingHorarios(false); }
   }
 
   return (
     <>
       <Topbar title="Configurações" />
-      <div className="p-6 max-w-2xl">
+      <div className="p-4 md:p-6 max-w-2xl space-y-5">
+
         {/* Logo */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5 mb-5">
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
           <h3 className="font-heading font-semibold text-sm text-ink mb-4">Logo do Estabelecimento</h3>
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-xl overflow-hidden border border-slate-200">
@@ -80,42 +112,89 @@ export default function ConfiguracoesPage() {
               <label className="field-label">Endereço</label>
               <input className="field-input" value={endereco} onChange={e => setEndereco(e.target.value)} placeholder="Rua, número, bairro, cidade" />
             </div>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="w-full bg-brand text-white font-semibold py-2.5 rounded-lg text-sm hover:bg-brand-dark transition disabled:opacity-60"
-            >
-              {saving ? "Salvando..." : "Salvar Configurações"}
+            <button onClick={handleSave} disabled={saving}
+              className="w-full bg-brand text-black font-semibold py-2.5 rounded-lg text-sm hover:bg-brand-dark transition disabled:opacity-60">
+              {saving ? "Salvando..." : "Salvar Dados"}
             </button>
           </div>
         </div>
 
+        {/* Horários de funcionamento */}
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <h3 className="font-heading font-semibold text-sm text-ink mb-1">Horários de Funcionamento</h3>
+          <p className="text-xs text-muted mb-4">Apenas os horários disponíveis aparecerão na página de agendamento</p>
+
+          <div className="space-y-3">
+            {DIAS.map(({ key, label }) => {
+              const h = horarios[key] ?? HORARIO_PADRAO;
+              return (
+                <div key={key} className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => updateHorario(key, { aberto: !h.aberto })}
+                    className={`w-20 shrink-0 py-1.5 rounded-lg text-xs font-semibold border transition ${
+                      h.aberto ? "bg-brand/10 border-brand text-brand" : "bg-slate-100 border-slate-200 text-slate-400"
+                    }`}
+                  >
+                    {label}
+                  </button>
+
+                  {h.aberto ? (
+                    <div className="flex items-center gap-2 flex-1">
+                      <select
+                        className="field-input flex-1"
+                        value={h.inicio}
+                        onChange={e => updateHorario(key, { inicio: e.target.value })}
+                      >
+                        {HORARIOS_OPTS.map(opt => <option key={opt}>{opt}</option>)}
+                      </select>
+                      <span className="text-xs text-muted shrink-0">até</span>
+                      <select
+                        className="field-input flex-1"
+                        value={h.fim}
+                        onChange={e => updateHorario(key, { fim: e.target.value })}
+                      >
+                        {HORARIOS_OPTS.map(opt => <option key={opt}>{opt}</option>)}
+                      </select>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-slate-400 italic">Fechado</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 flex items-center gap-3">
+            <label className="field-label mb-0 shrink-0">Intervalo entre horários</label>
+            <select className="field-input w-32" value={intervalo} onChange={e => setIntervalo(Number(e.target.value))}>
+              <option value={15}>15 min</option>
+              <option value={30}>30 min</option>
+              <option value={60}>1 hora</option>
+            </select>
+          </div>
+
+          <button onClick={handleSaveHorarios} disabled={savingHorarios}
+            className="w-full mt-4 bg-brand text-black font-semibold py-2.5 rounded-lg text-sm hover:bg-brand-dark transition disabled:opacity-60">
+            {savingHorarios ? "Salvando..." : "Salvar Horários"}
+          </button>
+        </div>
+
         {/* Link de agendamento */}
-        <div className="mt-4 bg-white border border-slate-200 rounded-xl p-5">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
           <h3 className="font-heading font-semibold text-sm text-ink mb-1">Link de Agendamento</h3>
-          <p className="text-xs text-muted mb-3">Compartilhe este link para seus clientes agendarem online</p>
+          <p className="text-xs text-muted mb-3">Compartilhe com seus clientes para agendarem online</p>
           <div className="flex items-center gap-2">
-            <input
-              readOnly
-              value={`https://enceradoapp.vercel.app/agendar/${tenant?.slug ?? ""}`}
-              className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-xs bg-slate-50 outline-none"
-            />
+            <input readOnly value={`https://enceradoapp.vercel.app/agendar/${tenant?.slug ?? ""}`}
+              className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-xs bg-slate-50 outline-none" />
             <button
-              onClick={() => {
-                navigator.clipboard.writeText(`https://enceradoapp.vercel.app/agendar/${tenant?.slug ?? ""}`);
-                toast.success("Link copiado!");
-              }}
-              className="shrink-0 bg-brand text-black text-xs font-semibold px-3 py-2 rounded-lg hover:bg-brand-dark transition"
-            >
+              onClick={() => { navigator.clipboard.writeText(`https://enceradoapp.vercel.app/agendar/${tenant?.slug ?? ""}`); toast.success("Link copiado!"); }}
+              className="shrink-0 bg-brand text-black text-xs font-semibold px-3 py-2 rounded-lg hover:bg-brand-dark transition">
               Copiar
             </button>
           </div>
-          <a
-            href={`https://enceradoapp.vercel.app/agendar/${tenant?.slug ?? ""}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-brand hover:underline mt-2 block"
-          >
+          <a href={`https://enceradoapp.vercel.app/agendar/${tenant?.slug ?? ""}`} target="_blank" rel="noopener noreferrer"
+            className="text-xs text-brand hover:underline mt-2 block">
             Abrir página →
           </a>
         </div>
@@ -124,7 +203,7 @@ export default function ConfiguracoesPage() {
       <style jsx global>{`
         .field-label{display:block;font-size:.7rem;font-weight:600;color:#3d4f63;margin-bottom:.35rem}
         .field-input{width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:.5rem .75rem;font-size:.82rem;outline:none;transition:border .15s;background:#fff}
-        .field-input:focus{border-color:#0057ff;box-shadow:0 0 0 3px rgba(0,87,255,.08)}
+        .field-input:focus{border-color:#00ff88;box-shadow:0 0 0 3px rgba(0,255,136,.08)}
       `}</style>
     </>
   );

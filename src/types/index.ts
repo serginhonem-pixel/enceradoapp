@@ -1,7 +1,13 @@
 // ─── TENANT ──────────────────────────────────────────────────────────────────
+export interface HorarioFuncionamento {
+  aberto: boolean;
+  inicio: string; // "08:00"
+  fim: string;    // "18:00"
+}
+
 export interface Tenant {
   id: string;
-  slug: string;           // subdomínio: "sopinha" → sopinha.lavaapp.com.br
+  slug: string;
   nome: string;
   logoUrl?: string;
   corPrimaria?: string;
@@ -9,6 +15,8 @@ export interface Tenant {
   endereco?: string;
   createdAt: Date;
   ativo: boolean;
+  horarios?: Record<string, HorarioFuncionamento>; // "0"=dom ... "6"=sab
+  intervaloAgendamento?: number; // minutos entre slots (30 padrão)
 }
 
 // ─── USUÁRIO ─────────────────────────────────────────────────────────────────
