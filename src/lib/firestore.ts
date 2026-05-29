@@ -199,14 +199,10 @@ export async function deleteAtendimento(tenantId: string, id: string) {
 
 // ─── AGENDAMENTOS ─────────────────────────────────────────────────────────────
 export async function getAgendamentos(tenantId: string, mes?: string): Promise<Agendamento[]> {
-  let q;
-  if (mes) {
-    q = query(col(tenantId, "agendamentos"), where("data", ">=", `${mes}-01`), where("data", "<=", `${mes}-31`), orderBy("data"), orderBy("hora"));
-  } else {
-    q = query(col(tenantId, "agendamentos"), orderBy("data"), orderBy("hora"));
-  }
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data(), createdAt: fromTimestamp(d.data().createdAt) })) as Agendamento[];
+  const snap = await getDocs(query(col(tenantId, "agendamentos"), orderBy("data")));
+  const all = snap.docs.map(d => ({ id: d.id, ...d.data(), createdAt: fromTimestamp(d.data().createdAt) })) as Agendamento[];
+  if (!mes) return all;
+  return all.filter(a => a.data?.startsWith(mes));
 }
 
 export async function saveAgendamento(tenantId: string, data: Omit<Agendamento, "id" | "tenantId">, id?: string): Promise<string> {
