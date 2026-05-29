@@ -32,10 +32,18 @@ export function useAuth() {
 
   async function sendPhoneCode(phone: string, containerId: string): Promise<ConfirmationResult> {
     if (!auth) throw new Error("Firebase não configurado");
+    // limpa o container e recria o reCAPTCHA do zero
     const container = document.getElementById(containerId);
     if (container) container.innerHTML = "";
-    const recaptcha = new RecaptchaVerifier(auth, containerId, { size: "invisible" });
-    await recaptcha.render();
+    const recaptcha = new RecaptchaVerifier(auth, containerId, {
+      size: "invisible",
+      callback: () => {},
+    });
+    try {
+      await recaptcha.render();
+    } catch {
+      // ignora erro de re-render
+    }
     return signInWithPhoneNumber(auth, phone, recaptcha);
   }
 
