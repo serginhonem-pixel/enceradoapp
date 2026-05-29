@@ -22,6 +22,10 @@ export function Topbar({ title, onMenuClick, actions }: TopbarProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
+  function getLidas(): string[] {
+    try { return JSON.parse(localStorage.getItem("notifs_lidas") ?? "[]"); } catch { return []; }
+  }
+
   useEffect(() => {
     if (!tenant) return;
     async function carregar() {
@@ -33,11 +37,12 @@ export function Topbar({ title, onMenuClick, actions }: TopbarProps) {
         getAgendamentos(tenant.id, mesProximo),
       ]);
       const todos = [...ags1, ...ags2];
-      const novos = todos.filter(a => a.status === "agendado" && a.clienteId === "");
+      const lidas = getLidas();
+      const novos = todos.filter(a => a.status === "agendado" && a.clienteId === "" && !lidas.includes(a.id));
       setNotifs(novos);
     }
     carregar();
-    const interval = setInterval(carregar, 30000); // atualiza a cada 30s
+    const interval = setInterval(carregar, 30000);
     return () => clearInterval(interval);
   }, [tenant]);
 
@@ -88,7 +93,12 @@ export function Topbar({ title, onMenuClick, actions }: TopbarProps) {
                   )}
                   {notifs.length > 0 && (
                     <button
-                      onClick={() => setNotifs([])}
+                      onClick={() => {
+                        const lidas = getLidas();
+                        const novasLidas = [...new Set([...lidas, ...notifs.map(n => n.id)])];
+                        localStorage.setItem("notifs_lidas", JSON.stringify(novasLidas));
+                        setNotifs([]);
+                      }}
                       className="text-xs text-muted hover:text-slate-600 transition"
                     >
                       Limpar
