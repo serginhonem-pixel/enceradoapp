@@ -26,9 +26,14 @@ export function Topbar({ title, onMenuClick, actions }: TopbarProps) {
     if (!tenant) return;
     async function carregar() {
       if (!tenant) return;
-      const mes = format(new Date(), "yyyy-MM");
-      const ags = await getAgendamentos(tenant.id, mes);
-      const novos = ags.filter(a => a.status === "agendado" && a.clienteId === "");
+      const mesAtual = format(new Date(), "yyyy-MM");
+      const mesProximo = format(new Date(new Date().setMonth(new Date().getMonth() + 1)), "yyyy-MM");
+      const [ags1, ags2] = await Promise.all([
+        getAgendamentos(tenant.id, mesAtual),
+        getAgendamentos(tenant.id, mesProximo),
+      ]);
+      const todos = [...ags1, ...ags2];
+      const novos = todos.filter(a => a.status === "agendado" && a.clienteId === "");
       setNotifs(novos);
     }
     carregar();
