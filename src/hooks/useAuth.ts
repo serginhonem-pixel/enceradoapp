@@ -32,7 +32,10 @@ export function useAuth() {
 
   async function sendPhoneCode(phone: string, containerId: string): Promise<ConfirmationResult> {
     if (!auth) throw new Error("Firebase não configurado");
+    const container = document.getElementById(containerId);
+    if (container) container.innerHTML = "";
     const recaptcha = new RecaptchaVerifier(auth, containerId, { size: "invisible" });
+    await recaptcha.render();
     return signInWithPhoneNumber(auth, phone, recaptcha);
   }
 

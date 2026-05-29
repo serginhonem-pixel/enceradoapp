@@ -56,9 +56,9 @@ export default function LoginPage() {
       setEtapa("codigo");
       toast.success("Código enviado por SMS!");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "";
-      if (msg.includes("invalid-phone-number")) toast.error("Número inválido. Use o formato: (11) 99999-9999");
-      else toast.error("Erro ao enviar SMS. Tente novamente.");
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("Phone auth error:", msg);
+      toast.error(msg.slice(0, 150));
     } finally {
       setLoading(false);
     }

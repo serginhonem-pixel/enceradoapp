@@ -81,8 +81,10 @@ export default function CadastroPage() {
       setConfirmation(result);
       setEtapa("codigo");
       toast.success("Código enviado por SMS!");
-    } catch {
-      toast.error("Erro ao enviar SMS. Verifique o número.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("Phone auth error:", msg);
+      toast.error(msg.slice(0, 150));
     } finally {
       setLoading(false);
     }
