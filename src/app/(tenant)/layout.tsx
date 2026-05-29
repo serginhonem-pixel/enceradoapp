@@ -14,10 +14,14 @@ import { useTenant } from "@/hooks/useTenant";
 function getSlugFromUrl(): string {
   if (typeof window === "undefined") return "";
   const host = window.location.hostname;
+  // Vercel e localhost nunca são tenants
+  if (host.endsWith(".vercel.app") || host === "localhost" || host === "127.0.0.1") {
+    const p = new URLSearchParams(window.location.search);
+    return p.get("tenant") ?? "";
+  }
   const parts = host.split(".");
   if (parts.length >= 3) return parts[0];
-  const p = new URLSearchParams(window.location.search);
-  return p.get("tenant") ?? "";
+  return "";
 }
 
 export default function TenantLayout({ children }: { children: React.ReactNode }) {
@@ -102,7 +106,8 @@ function BottomNav({ onSignOut }: { onSignOut: () => void }) {
   const pathname = usePathname();
   const { tenant } = useTenant();
   const [maisAberto, setMaisAberto] = useState(false);
-  const isSub = typeof window !== "undefined" && window.location.hostname.split(".").length >= 3;
+  const host = typeof window !== "undefined" ? window.location.hostname : "";
+  const isSub = !host.endsWith(".vercel.app") && host !== "localhost" && host.split(".").length >= 3;
   const p = (path: string) => isSub ? path : `${path}?tenant=${tenant?.slug ?? ""}`;
 
   const principais = [

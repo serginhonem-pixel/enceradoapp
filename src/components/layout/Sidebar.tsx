@@ -25,7 +25,9 @@ interface SidebarProps {
 
 function useIsSubdomain() {
   if (typeof window === "undefined") return false;
-  return window.location.hostname.split(".").length >= 3;
+  const host = window.location.hostname;
+  if (host.endsWith(".vercel.app") || host === "localhost" || host === "127.0.0.1") return false;
+  return host.split(".").length >= 3;
 }
 
 export function Sidebar({ onSignOut }: SidebarProps) {
