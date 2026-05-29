@@ -8,7 +8,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Toaster } from "react-hot-toast";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, ClipboardList, Users, Wrench, BarChart2, LogOut } from "lucide-react";
+import { LayoutDashboard, ClipboardList, Users, Wrench, BarChart2, LogOut, CalendarDays } from "lucide-react";
 import { useTenant } from "@/hooks/useTenant";
 
 function getSlugFromUrl(): string {
@@ -112,9 +112,9 @@ function BottomNav({ onSignOut }: { onSignOut: () => void }) {
 
   const principais = [
     { href: "/dashboard",    icon: LayoutDashboard, label: "Início" },
+    { href: "/agenda",       icon: CalendarDays,    label: "Agenda" },
     { href: "/atendimentos", icon: ClipboardList,   label: "OS" },
     { href: "/clientes",     icon: Users,           label: "Clientes" },
-    { href: "/servicos",     icon: Wrench,          label: "Serviços" },
   ];
 
   const extras = [

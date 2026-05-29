@@ -5,11 +5,12 @@ import Image from "next/image";
 import { useTenant } from "@/hooks/useTenant";
 import {
   LayoutDashboard, ClipboardList, Users, Wrench,
-  Package, DollarSign, BarChart2, History, Settings, LogOut,
+  Package, DollarSign, BarChart2, History, Settings, LogOut, CalendarDays,
 } from "lucide-react";
 
 const nav = [
   { label: "Dashboard",     href: "/dashboard",    icon: LayoutDashboard },
+  { label: "Agenda",        href: "/agenda",        icon: CalendarDays    },
   { label: "Atendimentos",  href: "/atendimentos",  icon: ClipboardList   },
   { label: "Clientes",      href: "/clientes",      icon: Users           },
   { label: "Serviços",      href: "/servicos",      icon: Wrench          },

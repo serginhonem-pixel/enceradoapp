@@ -6,7 +6,7 @@ import {
 import { db } from "./firebase";
 import type {
   Tenant, Cliente, Servico, Produto, CustoFixo,
-  AtendimentoOS, FechamentoDia, Veiculo,
+  AtendimentoOS, FechamentoDia, Veiculo, Agendamento,
 } from "@/types";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -195,6 +195,32 @@ export async function saveAtendimento(tenantId: string, data: Omit<AtendimentoOS
 
 export async function deleteAtendimento(tenantId: string, id: string) {
   await deleteDoc(docRef(tenantId, "atendimentos", id));
+}
+
+// ─── AGENDAMENTOS ─────────────────────────────────────────────────────────────
+export async function getAgendamentos(tenantId: string, mes?: string): Promise<Agendamento[]> {
+  let q;
+  if (mes) {
+    q = query(col(tenantId, "agendamentos"), where("data", ">=", `${mes}-01`), where("data", "<=", `${mes}-31`), orderBy("data"), orderBy("hora"));
+  } else {
+    q = query(col(tenantId, "agendamentos"), orderBy("data"), orderBy("hora"));
+  }
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data(), createdAt: fromTimestamp(d.data().createdAt) })) as Agendamento[];
+}
+
+export async function saveAgendamento(tenantId: string, data: Omit<Agendamento, "id" | "tenantId">, id?: string): Promise<string> {
+  const payload = { ...data, tenantId, createdAt: Timestamp.now() };
+  if (id) {
+    await updateDoc(docRef(tenantId, "agendamentos", id), payload as DocumentData);
+    return id;
+  }
+  const ref = await addDoc(col(tenantId, "agendamentos"), payload);
+  return ref.id;
+}
+
+export async function deleteAgendamento(tenantId: string, id: string) {
+  await deleteDoc(docRef(tenantId, "agendamentos", id));
 }
 
 // ─── FECHAMENTO ──────────────────────────────────────────────────────────────
