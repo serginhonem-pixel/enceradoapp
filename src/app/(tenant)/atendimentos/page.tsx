@@ -100,7 +100,7 @@ export default function AtendimentosPage() {
         totalFinal,
         formaPagamento: pagamento,
         status,
-        observacoes: obs.trim() || undefined,
+        observacoes: obs.trim() || "",
         createdAt: editando?.createdAt ?? new Date(),
         updatedAt: new Date(),
         concluidoAt: status === "concluido" ? new Date() : undefined,
@@ -108,8 +108,10 @@ export default function AtendimentosPage() {
       toast.success(editando ? "OS atualizada!" : "OS aberta!");
       setModal(false);
       load();
-    } catch {
-      toast.error("Erro ao salvar");
+    } catch (err) {
+      console.error("Erro ao salvar OS:", err);
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(msg.slice(0, 120));
     } finally {
       setSaving(false);
     }

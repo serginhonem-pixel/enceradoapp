@@ -5,8 +5,8 @@
 @tailwind utilities;
 
 :root {
-  --brand: #0057ff;
-  --brand-d: #0040cc;
+  --brand: #00ff88;
+  --brand-d: #00cc6a;
 }
 
 * { box-sizing: border-box; }

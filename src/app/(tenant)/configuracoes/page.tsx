@@ -37,7 +37,7 @@ export default function ConfiguracoesPage() {
 
   async function handleLogo(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file || !tenant) return;
+    if (!file || !tenant || !storage) return;
     setUploading(true);
     try {
       const storageRef = ref(storage, `tenants/${tenant.id}/logo`);

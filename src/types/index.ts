@@ -33,8 +33,11 @@ export interface Cliente {
   createdAt: Date;
 }
 
+export type TipoVeiculo = "carro" | "moto" | "outro";
+
 export interface Veiculo {
   id: string;
+  tipo: TipoVeiculo;
   placa: string;
   modelo: string;
   cor: string;
@@ -57,6 +60,7 @@ export interface Servico {
   preco: number;
   duracaoMin: number;
   ativo: boolean;
+  tiposVeiculo?: TipoVeiculo[];
   // Custos do serviço
   custoMaoObra?: number;      // custo de mão de obra (R$)
   consumiveis?: ConsumívelServico[]; // insumos utilizados

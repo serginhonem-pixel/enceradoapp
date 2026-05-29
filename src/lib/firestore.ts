@@ -50,7 +50,21 @@ export async function createTenant(data: Omit<Tenant, "id" | "createdAt">): Prom
 }
 
 export async function updateTenant(id: string, data: Partial<Tenant>) {
-  await updateDoc(doc(db, "tenants", id), data as DocumentData);
+  await updateDoc(doc(requireDb(), "tenants", id), data as DocumentData);
+}
+
+export async function saveUserTenant(userId: string, tenantId: string) {
+  await updateDoc(doc(requireDb(), "users", userId), { tenantId }).catch(async () => {
+    await addDoc(collection(requireDb(), "users"), { userId, tenantId });
+  });
+}
+
+export async function getUserTenant(userId: string): Promise<Tenant | null> {
+  const q = query(collection(requireDb(), "users"), where("userId", "==", userId));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  const tenantId = snap.docs[0].data().tenantId as string;
+  return getTenant(tenantId);
 }
 
 // ─── CLIENTES ────────────────────────────────────────────────────────────────

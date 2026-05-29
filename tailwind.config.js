@@ -9,16 +9,16 @@ const config = {
     extend: {
       colors: {
         brand: {
-          DEFAULT: "#0057ff",
-          dark: "#0040cc",
-          light: "#e6eeff",
+          DEFAULT: "#00ff88",
+          dark: "#00cc6a",
+          light: "#ccffe8",
         },
         ink: {
-          DEFAULT: "#0a0f1e",
-          2: "#1e2a3a",
-          3: "#3d4f63",
+          DEFAULT: "#050b0f",
+          2: "#0d1f18",
+          3: "#1a3329",
         },
-        muted: "#7a8ea3",
+        muted: "#6b8f7a",
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],

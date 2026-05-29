@@ -6,7 +6,7 @@ import { Plus, Search, Pencil, Trash2, Car } from "lucide-react";
 import toast from "react-hot-toast";
 import type { Cliente, Veiculo } from "@/types";
 
-const EV: Veiculo = { id: "", placa: "", modelo: "", cor: "", ano: "" };
+const EV: Veiculo = { id: "", tipo: "carro", placa: "", modelo: "", cor: "", ano: "" };
 
 export default function DemoClientes() {
   const [clientes, setClientes] = useState<Cliente[]>([]);

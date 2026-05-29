@@ -2,29 +2,47 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { getUserTenant } from "@/lib/firestore";
 import { TenantProvider } from "@/contexts/TenantProvider";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Toaster } from "react-hot-toast";
 
-function getSlug(): string {
+function getSlugFromUrl(): string {
   if (typeof window === "undefined") return "";
   const host = window.location.hostname;
   const parts = host.split(".");
   if (parts.length >= 3) return parts[0];
-  // desenvolvimento local: usa query param ?tenant=slug
   const p = new URLSearchParams(window.location.search);
-  return p.get("tenant") ?? "demo";
+  return p.get("tenant") ?? "";
 }
 
 export default function TenantLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
   const [slug, setSlug] = useState("");
+  const [slugLoading, setSlugLoading] = useState(true);
   const [mobileSidebar, setMobileSidebar] = useState(false);
 
   useEffect(() => {
-    setSlug(getSlug());
-  }, []);
+    if (!loading && !user) { router.replace("/login"); return; }
+    if (!user) return;
+
+    const urlSlug = getSlugFromUrl();
+    if (urlSlug) {
+      setSlug(urlSlug);
+      setSlugLoading(false);
+      return;
+    }
+    // busca o tenant do usuário no Firestore
+    getUserTenant(user.uid).then((tenant) => {
+      if (tenant) {
+        setSlug(tenant.slug);
+      } else {
+        router.replace("/onboarding");
+      }
+      setSlugLoading(false);
+    });
+  }, [user, loading, router]);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/login");

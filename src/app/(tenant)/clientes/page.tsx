@@ -8,7 +8,10 @@ import { Plus, Search, Pencil, Trash2, Car } from "lucide-react";
 import toast from "react-hot-toast";
 import type { Cliente, Veiculo } from "@/types";
 
-const EMPTY_VEICULO: Veiculo = { id: "", placa: "", modelo: "", cor: "", ano: "" };
+const EMPTY_VEICULO: Veiculo = { id: "", tipo: "carro", placa: "", modelo: "", cor: "", ano: "" };
+
+const TIPO_ICONS: Record<string, string> = { carro: "🚗", moto: "🏍️", outro: "🚐" };
+const TIPO_LABELS: Record<string, string> = { carro: "Carro", moto: "Moto", outro: "Outro" };
 
 export default function ClientesPage() {
   const { tenant } = useTenant();
@@ -47,8 +50,8 @@ export default function ClientesPage() {
       const data = {
         nome: form.nome.trim(),
         telefone: form.telefone.trim(),
-        email: form.email.trim() || undefined,
-        cpf: form.cpf.trim() || undefined,
+        email: form.email.trim() || "",
+        cpf: form.cpf.trim() || "",
         veiculos: veiculos.filter(v => v.placa || v.modelo),
       };
       await saveCliente(tenant.id, data, editando?.id);
@@ -122,7 +125,7 @@ export default function ClientesPage() {
                       <div className="flex flex-wrap gap-1.5 mt-1">
                         {c.veiculos.map(v => (
                           <span key={v.id} className="inline-flex items-center gap-1 text-[0.65rem] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium">
-                            <Car size={9} /> {v.placa} · {v.modelo} · {v.cor}
+                            {TIPO_ICONS[v.tipo ?? "carro"]} {v.placa} · {v.modelo} · {v.cor}
                           </span>
                         ))}
                       </div>
@@ -178,15 +181,33 @@ export default function ClientesPage() {
               </button>
             </div>
             {veiculos.map((v, i) => (
-              <div key={v.id} className="grid grid-cols-4 gap-2 mb-2 items-end">
-                <input className="field-input uppercase" placeholder="Placa" value={v.placa} onChange={e => updateVeiculo(i, "placa", e.target.value.toUpperCase())} />
-                <input className="field-input" placeholder="Modelo" value={v.modelo} onChange={e => updateVeiculo(i, "modelo", e.target.value)} />
-                <input className="field-input" placeholder="Cor" value={v.cor} onChange={e => updateVeiculo(i, "cor", e.target.value)} />
-                <div className="flex gap-1">
-                  <input className="field-input w-16" placeholder="Ano" value={v.ano} onChange={e => updateVeiculo(i, "ano", e.target.value)} />
+              <div key={v.id} className="space-y-2 mb-3 pb-3 border-b border-slate-100 last:border-0 last:mb-0 last:pb-0">
+                {/* Tipo */}
+                <div className="flex gap-2">
+                  {(["carro", "moto", "outro"] as const).map(tipo => (
+                    <button
+                      key={tipo}
+                      type="button"
+                      onClick={() => updateVeiculo(i, "tipo", tipo)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold border transition ${
+                        v.tipo === tipo
+                          ? "bg-brand/10 border-brand text-brand"
+                          : "border-slate-200 text-slate-400 hover:border-slate-300"
+                      }`}
+                    >
+                      <span>{TIPO_ICONS[tipo]}</span> {TIPO_LABELS[tipo]}
+                    </button>
+                  ))}
                   {veiculos.length > 1 && (
-                    <button onClick={() => setVeiculos(vv => vv.filter((_, ii) => ii !== i))} className="text-red-400 hover:text-red-600 px-1">✕</button>
+                    <button onClick={() => setVeiculos(vv => vv.filter((_, ii) => ii !== i))} className="text-red-400 hover:text-red-600 px-2">✕</button>
                   )}
+                </div>
+                {/* Dados */}
+                <div className="grid grid-cols-4 gap-2">
+                  <input className="field-input uppercase" placeholder="Placa" value={v.placa} onChange={e => updateVeiculo(i, "placa", e.target.value.toUpperCase())} />
+                  <input className="field-input" placeholder="Modelo" value={v.modelo} onChange={e => updateVeiculo(i, "modelo", e.target.value)} />
+                  <input className="field-input" placeholder="Cor" value={v.cor} onChange={e => updateVeiculo(i, "cor", e.target.value)} />
+                  <input className="field-input" placeholder="Ano" value={v.ano} onChange={e => updateVeiculo(i, "ano", e.target.value)} />
                 </div>
               </div>
             ))}

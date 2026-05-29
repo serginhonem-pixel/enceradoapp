@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import {
   onAuthStateChanged, signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut as firebaseSignOut, User,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -28,10 +29,15 @@ export function useAuth() {
     return signInWithEmailAndPassword(auth, email, password);
   }
 
+  async function signUp(email: string, password: string) {
+    if (!auth) throw new Error("Firebase não configurado. Configure o .env.local");
+    return createUserWithEmailAndPassword(auth, email, password);
+  }
+
   async function signOut() {
     if (!auth) return;
     return firebaseSignOut(auth);
   }
 
-  return { user, loading, signIn, signOut };
+  return { user, loading, signIn, signUp, signOut };
 }

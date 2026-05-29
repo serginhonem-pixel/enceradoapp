@@ -121,8 +121,8 @@ export function lsGetAtendimentos(dataStr?: string): AtendimentoOS[] {
   if (!dataStr) return list;
   return list.filter(a => {
     const d = typeof a.createdAt === "string"
-      ? a.createdAt.slice(0, 10)
-      : new Date(a.createdAt).toISOString().slice(0, 10);
+      ? (a.createdAt as string).slice(0, 10)
+      : new Date(a.createdAt as Date).toISOString().slice(0, 10);
     return d === dataStr;
   });
 }

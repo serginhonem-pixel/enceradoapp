@@ -1,7 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { getUserTenant } from "@/lib/firestore";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function LoginPage() {
@@ -19,8 +21,13 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await signIn(email, senha);
-      router.replace("/dashboard");
+      const cred = await signIn(email, senha);
+      const tenant = await getUserTenant(cred.user.uid);
+      if (tenant) {
+        router.replace(`/dashboard?tenant=${tenant.slug}`);
+      } else {
+        router.replace("/dashboard");
+      }
     } catch {
       toast.error("Email ou senha incorretos");
     } finally {
@@ -38,12 +45,11 @@ export default function LoginPage() {
             🚗
           </div>
           <h1 className="font-heading font-bold text-2xl text-ink">
-            Lava<span className="text-brand">App</span>
+            Encerad<span className="text-brand">oApp</span>
           </h1>
           <p className="text-muted text-sm mt-1">Entre na sua conta</p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
           <div>
             <label className="block text-xs font-semibold text-ink-3 mb-1.5">Email</label>
@@ -70,11 +76,16 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brand hover:bg-brand-dark disabled:opacity-60 text-white font-semibold py-2.5 rounded-lg text-sm transition"
+            className="w-full bg-brand hover:bg-brand-dark disabled:opacity-60 text-black font-semibold py-2.5 rounded-lg text-sm transition"
           >
             {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
+
+        <p className="text-center text-sm text-muted mt-4">
+          Não tem conta?{" "}
+          <Link href="/cadastro" className="text-brand font-semibold hover:underline">Criar conta grátis</Link>
+        </p>
       </div>
     </main>
   );

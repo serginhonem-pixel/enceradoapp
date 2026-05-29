@@ -12,11 +12,11 @@ export const DEMO_TENANT: Tenant = {
 };
 
 export const DEMO_CLIENTES: Cliente[] = [
-  { id: "c1", tenantId: "demo", nome: "João Silva",    telefone: "(11) 99111-1111", email: "joao@email.com",  cpf: "123.456.789-00", veiculos: [{ id: "v1", placa: "ABC-1234", modelo: "Civic",    cor: "Prata",  ano: "2021" }], createdAt: new Date() },
-  { id: "c2", tenantId: "demo", nome: "Maria Souza",   telefone: "(11) 99222-2222", email: "maria@email.com", cpf: "987.654.321-00", veiculos: [{ id: "v2", placa: "DEF-5678", modelo: "HB20",     cor: "Branco", ano: "2022" }, { id: "v3", placa: "GHI-9012", modelo: "Onix", cor: "Preto", ano: "2020" }], createdAt: new Date() },
-  { id: "c3", tenantId: "demo", nome: "Carlos Pereira",telefone: "(11) 99333-3333", email: undefined,         cpf: undefined,        veiculos: [{ id: "v4", placa: "JKL-3456", modelo: "Corolla",  cor: "Cinza",  ano: "2023" }], createdAt: new Date() },
-  { id: "c4", tenantId: "demo", nome: "Ana Costa",     telefone: "(11) 99444-4444", email: "ana@email.com",   cpf: "111.222.333-44", veiculos: [{ id: "v5", placa: "MNO-7890", modelo: "Argo",     cor: "Azul",   ano: "2022" }], createdAt: new Date() },
-  { id: "c5", tenantId: "demo", nome: "Pedro Alves",   telefone: "(11) 99555-5555", email: undefined,         cpf: undefined,        veiculos: [{ id: "v6", placa: "PQR-1122", modelo: "Sandero",  cor: "Vermelho", ano: "2021" }], createdAt: new Date() },
+  { id: "c1", tenantId: "demo", nome: "João Silva",    telefone: "(11) 99111-1111", email: "joao@email.com",  cpf: "123.456.789-00", veiculos: [{ id: "v1", tipo: "carro" as const, placa: "ABC-1234", modelo: "Civic",    cor: "Prata",  ano: "2021" }], createdAt: new Date() },
+  { id: "c2", tenantId: "demo", nome: "Maria Souza",   telefone: "(11) 99222-2222", email: "maria@email.com", cpf: "987.654.321-00", veiculos: [{ id: "v2", tipo: "carro" as const, placa: "DEF-5678", modelo: "HB20",     cor: "Branco", ano: "2022" }, { id: "v3", tipo: "carro" as const, placa: "GHI-9012", modelo: "Onix", cor: "Preto", ano: "2020" }], createdAt: new Date() },
+  { id: "c3", tenantId: "demo", nome: "Carlos Pereira",telefone: "(11) 99333-3333", email: undefined,         cpf: undefined,        veiculos: [{ id: "v4", tipo: "carro" as const, placa: "JKL-3456", modelo: "Corolla",  cor: "Cinza",  ano: "2023" }], createdAt: new Date() },
+  { id: "c4", tenantId: "demo", nome: "Ana Costa",     telefone: "(11) 99444-4444", email: "ana@email.com",   cpf: "111.222.333-44", veiculos: [{ id: "v5", tipo: "carro" as const, placa: "MNO-7890", modelo: "Argo",     cor: "Azul",   ano: "2022" }], createdAt: new Date() },
+  { id: "c5", tenantId: "demo", nome: "Pedro Alves",   telefone: "(11) 99555-5555", email: undefined,         cpf: undefined,        veiculos: [{ id: "v6", tipo: "moto"  as const, placa: "PQR-1122", modelo: "Sandero",  cor: "Vermelho", ano: "2021" }], createdAt: new Date() },
 ];
 
 export const DEMO_SERVICOS: Servico[] = [

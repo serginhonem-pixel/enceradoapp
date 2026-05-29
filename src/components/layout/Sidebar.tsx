@@ -23,9 +23,17 @@ interface SidebarProps {
   onSignOut: () => void;
 }
 
+function useIsSubdomain() {
+  if (typeof window === "undefined") return false;
+  return window.location.hostname.split(".").length >= 3;
+}
+
 export function Sidebar({ onSignOut }: SidebarProps) {
   const pathname = usePathname();
   const { tenant } = useTenant();
+  const isSub = useIsSubdomain();
+  const tenantParam = !isSub && tenant?.slug ? `?tenant=${tenant.slug}` : "";
+  const href = (path: string) => `${path}${tenantParam}`;
 
   return (
     <aside className="w-56 bg-ink flex flex-col sticky top-0 h-screen overflow-y-auto shrink-0">
@@ -55,12 +63,12 @@ export function Sidebar({ onSignOut }: SidebarProps) {
         <p className="text-[0.6rem] uppercase tracking-widest text-white/20 font-semibold px-2 pt-3 pb-1">
           Menu
         </p>
-        {nav.map(({ label, href, icon: Icon }) => {
-          const active = pathname === href || pathname.startsWith(href + "/");
+        {nav.map(({ label, href: path, icon: Icon }) => {
+          const active = pathname === path || pathname.startsWith(path + "/");
           return (
             <Link
-              key={href}
-              href={href}
+              key={path}
+              href={href(path)}
               className={`flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[0.8rem] font-medium transition-all ${
                 active
                   ? "bg-brand/20 text-white"
@@ -80,7 +88,7 @@ export function Sidebar({ onSignOut }: SidebarProps) {
       {/* Footer */}
       <div className="p-3 border-t border-white/[0.07] space-y-1">
         <Link
-          href="/configuracoes"
+          href={href("/configuracoes")}
           className="flex items-center gap-2.5 px-2.5 py-2 rounded-md text-white/35 hover:text-white/70 text-[0.78rem] font-medium transition-all hover:bg-white/[0.05]"
         >
           <Settings size={13} />
