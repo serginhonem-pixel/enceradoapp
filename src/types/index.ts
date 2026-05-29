@@ -42,14 +42,25 @@ export interface Veiculo {
 }
 
 // ─── SERVIÇO ─────────────────────────────────────────────────────────────────
+export interface ConsumívelServico {
+  nome: string;       // ex: "Shampoo", "Cera"
+  quantidade: number; // ex: 0.1
+  unidade: string;    // ex: "L", "ml", "un"
+  custoUnitario: number;
+}
+
 export interface Servico {
   id: string;
   tenantId: string;
   nome: string;
   descricao?: string;
   preco: number;
-  duracaoMin: number;   // minutos estimados
+  duracaoMin: number;
   ativo: boolean;
+  // Custos do serviço
+  custoMaoObra?: number;      // custo de mão de obra (R$)
+  consumiveis?: ConsumívelServico[]; // insumos utilizados
+  // calculado: preco - custoMaoObra - total consumíveis = margem
 }
 
 // ─── PRODUTO ─────────────────────────────────────────────────────────────────
@@ -102,6 +113,30 @@ export interface AtendimentoOS {
   createdAt: Date;
   updatedAt: Date;
   concluidoAt?: Date;
+  // Agendamento
+  agendadoPara?: string;  // ISO string: "2025-06-10T09:00"
+  agendadoHora?: string;  // "09:00"
+}
+
+// ─── AGENDAMENTO ──────────────────────────────────────────────────────────────
+export interface Agendamento {
+  id: string;
+  tenantId: string;
+  clienteId: string;
+  clienteNome: string;
+  clienteTelefone: string;
+  veiculoPlaca: string;
+  veiculoModelo: string;
+  veiculoCor: string;
+  servicoIds: string[];
+  servicoNomes: string[];
+  totalEstimado: number;
+  data: string;       // "2025-06-10"
+  hora: string;       // "09:00"
+  observacoes?: string;
+  status: "agendado" | "confirmado" | "cancelado" | "convertido";
+  osId?: string;      // OS gerada ao converter
+  createdAt: Date;
 }
 
 // ─── FECHAMENTO DO DIA ────────────────────────────────────────────────────────

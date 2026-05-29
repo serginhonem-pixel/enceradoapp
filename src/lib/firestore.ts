@@ -10,11 +10,15 @@ import type {
 } from "@/types";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
+function requireDb() {
+  if (!db) throw new Error("Firebase não configurado. Crie o arquivo .env.local com as credenciais.");
+  return db;
+}
 function col(tenantId: string, sub: string) {
-  return collection(db, "tenants", tenantId, sub);
+  return collection(requireDb(), "tenants", tenantId, sub);
 }
 function docRef(tenantId: string, sub: string, id: string) {
-  return doc(db, "tenants", tenantId, sub, id);
+  return doc(requireDb(), "tenants", tenantId, sub, id);
 }
 function fromTimestamp(v: unknown): Date {
   if (v instanceof Timestamp) return v.toDate();
@@ -24,7 +28,7 @@ function fromTimestamp(v: unknown): Date {
 
 // ─── TENANT ─────────────────────────────────────────────────────────────────
 export async function getTenantBySlug(slug: string): Promise<Tenant | null> {
-  const q = query(collection(db, "tenants"), where("slug", "==", slug));
+  const q = query(collection(requireDb(), "tenants"), where("slug", "==", slug));
   const snap = await getDocs(q);
   if (snap.empty) return null;
   const d = snap.docs[0];
@@ -32,13 +36,13 @@ export async function getTenantBySlug(slug: string): Promise<Tenant | null> {
 }
 
 export async function getTenant(id: string): Promise<Tenant | null> {
-  const snap = await getDoc(doc(db, "tenants", id));
+  const snap = await getDoc(doc(requireDb(), "tenants", id));
   if (!snap.exists()) return null;
   return { id: snap.id, ...snap.data(), createdAt: fromTimestamp(snap.data()!.createdAt) } as Tenant;
 }
 
 export async function createTenant(data: Omit<Tenant, "id" | "createdAt">): Promise<string> {
-  const ref = await addDoc(collection(db, "tenants"), {
+  const ref = await addDoc(collection(requireDb(), "tenants"), {
     ...data,
     createdAt: Timestamp.now(),
   });

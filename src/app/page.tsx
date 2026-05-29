@@ -15,8 +15,14 @@ export default function LandingPage() {
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
-            href="/login"
+            href="/demo/dashboard"
             className="bg-brand hover:bg-brand-dark text-white font-semibold px-6 py-3 rounded-lg transition"
+          >
+            Ver Demo 🚀
+          </Link>
+          <Link
+            href="/login"
+            className="border border-slate-600 text-slate-300 hover:border-slate-400 font-semibold px-6 py-3 rounded-lg transition"
           >
             Entrar
           </Link>

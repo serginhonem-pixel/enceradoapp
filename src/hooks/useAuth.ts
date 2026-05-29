@@ -11,6 +11,11 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Se Firebase não está configurado, marca como não autenticado
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
@@ -19,10 +24,12 @@ export function useAuth() {
   }, []);
 
   async function signIn(email: string, password: string) {
+    if (!auth) throw new Error("Firebase não configurado. Configure o .env.local");
     return signInWithEmailAndPassword(auth, email, password);
   }
 
   async function signOut() {
+    if (!auth) return;
     return firebaseSignOut(auth);
   }
 
