@@ -59,20 +59,15 @@ export default function AgendaPage() {
   const horariosDisponiveis = (() => {
     const diaSemana = new Date(data + "T12:00:00").getDay().toString();
     const horario = tenant?.horarios?.[diaSemana];
-    if (!horario || !horario.aberto) {
-      // Sem configuração: lista padrão das 07:00 às 22:00
-      return gerarSlots("07:00", "22:00", tenant?.intervaloAgendamento ?? 30);
+    const slots = (!horario || !horario.aberto)
+      ? gerarSlots("07:00", "22:00", tenant?.intervaloAgendamento ?? 30)
+      : gerarSlots(horario.inicio, horario.fim, tenant?.intervaloAgendamento ?? 30);
+    // Garante que o horário já salvo sempre aparece na lista, mesmo fora do padrão
+    if (hora && !slots.includes(hora)) {
+      return [...slots, hora].sort();
     }
-    return gerarSlots(horario.inicio, horario.fim, tenant?.intervaloAgendamento ?? 30);
+    return slots;
   })();
-
-  // Quando os slots disponíveis mudam e o horário atual não está na lista, ajusta para o primeiro disponível
-  useEffect(() => {
-    if (modal && horariosDisponiveis.length > 0 && !horariosDisponiveis.includes(hora)) {
-      setHora(horariosDisponiveis[0]);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, tenant]);
 
   function load() {
     if (!tenant) return;
