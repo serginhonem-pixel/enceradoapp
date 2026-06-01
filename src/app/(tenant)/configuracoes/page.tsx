@@ -17,9 +17,10 @@ const DIAS = [
   { key: "6", label: "Sábado" },
 ];
 
-const HORARIOS_OPTS = Array.from({ length: 27 }, (_, i) => {
+// 06:00 até 00:00 (meia-noite) em intervalos de 30min
+const HORARIOS_OPTS = Array.from({ length: 37 }, (_, i) => {
   const total = 6 * 60 + i * 30;
-  const h = Math.floor(total / 60).toString().padStart(2, "0");
+  const h = (Math.floor(total / 60) % 24).toString().padStart(2, "0");
   const m = (total % 60).toString().padStart(2, "0");
   return `${h}:${m}`;
 });

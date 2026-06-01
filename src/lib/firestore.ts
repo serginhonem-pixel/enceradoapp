@@ -148,25 +148,24 @@ export async function deleteCustoFixo(tenantId: string, id: string) {
 }
 
 // ─── ATENDIMENTOS ────────────────────────────────────────────────────────────
+function toDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export async function getAtendimentos(tenantId: string, dataStr?: string): Promise<AtendimentoOS[]> {
-  let q = query(col(tenantId, "atendimentos"), orderBy("createdAt", "desc"), limit(200));
-  if (dataStr) {
-    const start = new Date(dataStr + "T00:00:00");
-    const end = new Date(dataStr + "T23:59:59");
-    q = query(
-      col(tenantId, "atendimentos"),
-      where("createdAt", ">=", Timestamp.fromDate(start)),
-      where("createdAt", "<=", Timestamp.fromDate(end)),
-      orderBy("createdAt", "desc"),
-    );
-  }
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({
+  // Busca sempre sem filtro no Firestore para evitar problemas de índice/timezone.
+  // A filtragem por data é feita no cliente usando o timezone local do usuário.
+  const snap = await getDocs(
+    query(col(tenantId, "atendimentos"), orderBy("createdAt", "desc"), limit(500))
+  );
+  const all = snap.docs.map(d => ({
     id: d.id, ...d.data(),
     createdAt: fromTimestamp(d.data().createdAt),
     updatedAt: fromTimestamp(d.data().updatedAt),
     concluidoAt: d.data().concluidoAt ? fromTimestamp(d.data().concluidoAt) : undefined,
   })) as AtendimentoOS[];
+  if (!dataStr) return all;
+  return all.filter(a => toDateStr(a.createdAt) === dataStr);
 }
 
 export async function getAtendimentosPorPeriodo(tenantId: string, inicio: Date, fim: Date): Promise<AtendimentoOS[]> {

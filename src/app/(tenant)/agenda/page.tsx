@@ -17,7 +17,19 @@ const STATUS_COLORS: Record<Agendamento["status"], string> = {
   convertido: "bg-slate-100 text-slate-500 border-slate-200",
 };
 
-const HORARIOS = ["07:00","07:30","08:00","08:30","09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00"];
+function gerarSlots(inicio: string, fim: string, intervalo: number): string[] {
+  const [hI, mI] = inicio.split(":").map(Number);
+  const [hF, mF] = fim.split(":").map(Number);
+  const minI = hI * 60 + mI;
+  // 00:00 como fim = meia-noite = 24h
+  const minF = hF === 0 && mF === 0 ? 24 * 60 : hF * 60 + mF;
+  const slots: string[] = [];
+  for (let m = minI; m < minF; m += intervalo) {
+    const h = Math.floor(m / 60) % 24;
+    slots.push(`${h.toString().padStart(2, "0")}:${(m % 60).toString().padStart(2, "0")}`);
+  }
+  return slots;
+}
 
 export default function AgendaPage() {
   const { tenant } = useTenant();
@@ -40,6 +52,14 @@ export default function AgendaPage() {
   const [status, setStatus] = useState<Agendamento["status"]>("agendado");
 
   const mes = format(mesAtual, "yyyy-MM");
+
+  // Slots disponíveis baseados no dia da semana selecionado e nos horários do tenant
+  const horariosDisponiveis = (() => {
+    const diaSemana = new Date(data + "T12:00:00").getDay().toString();
+    const horario = tenant?.horarios?.[diaSemana];
+    if (!horario || !horario.aberto) return [];
+    return gerarSlots(horario.inicio, horario.fim, tenant?.intervaloAgendamento ?? 30);
+  })();
 
   function load() {
     if (!tenant) return;
@@ -257,9 +277,13 @@ export default function AgendaPage() {
             </div>
             <div>
               <label className="field-label">Horário *</label>
-              <select className="field-input" value={hora} onChange={e => setHora(e.target.value)}>
-                {HORARIOS.map(h => <option key={h}>{h}</option>)}
-              </select>
+              {horariosDisponiveis.length === 0 ? (
+                <p className="text-xs text-red-500 py-2">Dia fechado nas configurações.</p>
+              ) : (
+                <select className="field-input" value={hora} onChange={e => setHora(e.target.value)}>
+                  {horariosDisponiveis.map(h => <option key={h}>{h}</option>)}
+                </select>
+              )}
             </div>
           </div>
 
