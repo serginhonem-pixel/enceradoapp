@@ -1,14 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useTenant } from "@/hooks/useTenant";
-import { getAgendamentos, saveAgendamento, deleteAgendamento, getClientes, getServicos } from "@/lib/firestore";
+import { getAgendamentos, saveAgendamento, deleteAgendamento, getClientes, getServicos, saveAtendimento, getProximoNumeroOS } from "@/lib/firestore";
 import { Topbar } from "@/components/layout/Topbar";
 import { Modal } from "@/components/ui/Modal";
-import { Plus, ChevronLeft, ChevronRight, Trash2, CheckCircle2 } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Trash2, CheckCircle2, ClipboardList } from "lucide-react";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { Agendamento, Cliente, Servico } from "@/types";
+import type { Agendamento, Cliente, Servico, ItemOS } from "@/types";
 
 const STATUS_COLORS: Record<Agendamento["status"], string> = {
   agendado:   "bg-blue-100 text-blue-700 border-blue-200",
@@ -33,6 +34,7 @@ function gerarSlots(inicio: string, fim: string, intervalo: number): string[] {
 
 export default function AgendaPage() {
   const { tenant } = useTenant();
+  const router = useRouter();
   const [mesAtual, setMesAtual] = useState(new Date());
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -134,6 +136,47 @@ export default function AgendaPage() {
     await deleteAgendamento(tenant.id, id);
     toast.success("Removido");
     load();
+  }
+
+  async function handleConverter(a: Agendamento) {
+    if (!tenant) return;
+    const servicosSel = servicos.filter(s => a.servicoIds.includes(s.id));
+    const itens: ItemOS[] = servicosSel.map(s => ({
+      servicoId: s.id,
+      servicoNome: s.nome,
+      preco: s.preco,
+    }));
+    const total = itens.reduce((sum, i) => sum + i.preco, 0);
+    try {
+      const numero = await getProximoNumeroOS(tenant.id);
+      const osId = await saveAtendimento(tenant.id, {
+        numero,
+        clienteId: a.clienteId,
+        clienteNome: a.clienteNome,
+        veiculoPlaca: a.veiculoPlaca,
+        veiculoModelo: a.veiculoModelo,
+        veiculoCor: a.veiculoCor,
+        itens,
+        total,
+        desconto: 0,
+        totalFinal: total,
+        formaPagamento: "dinheiro",
+        status: "aguardando",
+        observacoes: a.observacoes || "",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        agendadoPara: `${a.data}T${a.hora}`,
+        agendadoHora: a.hora,
+      });
+      await saveAgendamento(tenant.id, { ...a, status: "convertido", osId }, a.id);
+      toast.success("OS criada! Redirecionando...");
+      const tenantParam = tenant?.slug ? `?tenant=${tenant.slug}` : "";
+      setTimeout(() => router.push(`/atendimentos${tenantParam}`), 800);
+      load();
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao criar OS");
+    }
   }
 
   async function handleConfirmar(a: Agendamento) {
@@ -247,6 +290,15 @@ export default function AgendaPage() {
                         <p className="text-xs font-semibold mt-1">R$ {a.totalEstimado.toFixed(2)}</p>
                       </div>
                       <div className="flex flex-col gap-1">
+                        {(a.status === "agendado" || a.status === "confirmado") && (
+                          <button
+                            onClick={() => handleConverter(a)}
+                            className="p-1 hover:bg-white/50 rounded transition"
+                            title="Converter para OS"
+                          >
+                            <ClipboardList size={14} />
+                          </button>
+                        )}
                         {a.status === "agendado" && (
                           <button onClick={() => handleConfirmar(a)} className="p-1 hover:bg-white/50 rounded transition" title="Confirmar">
                             <CheckCircle2 size={14} />
