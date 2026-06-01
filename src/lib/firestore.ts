@@ -169,6 +169,23 @@ export async function getAtendimentos(tenantId: string, dataStr?: string): Promi
   })) as AtendimentoOS[];
 }
 
+export async function getAtendimentosPorPeriodo(tenantId: string, inicio: Date, fim: Date): Promise<AtendimentoOS[]> {
+  const q = query(
+    col(tenantId, "atendimentos"),
+    where("createdAt", ">=", Timestamp.fromDate(inicio)),
+    where("createdAt", "<=", Timestamp.fromDate(fim)),
+    orderBy("createdAt", "desc"),
+    limit(500),
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({
+    id: d.id, ...d.data(),
+    createdAt: fromTimestamp(d.data().createdAt),
+    updatedAt: fromTimestamp(d.data().updatedAt),
+    concluidoAt: d.data().concluidoAt ? fromTimestamp(d.data().concluidoAt) : undefined,
+  })) as AtendimentoOS[];
+}
+
 export async function getProximoNumeroOS(tenantId: string): Promise<number> {
   const snap = await getDocs(
     query(col(tenantId, "atendimentos"), orderBy("numero", "desc"), limit(1))
