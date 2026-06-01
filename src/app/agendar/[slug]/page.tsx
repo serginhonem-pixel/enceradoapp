@@ -76,7 +76,7 @@ export default function AgendarPage() {
   const horariosTenant = tenant?.horarios as Record<string, { aberto: boolean; inicio: string; fim: string }> | undefined;
   const intervaloTenant = tenant?.intervaloAgendamento ?? 30;
 
-  const diasDisponiveis = Array.from({ length: 30 }, (_, i) => addDays(new Date(), i + 1))
+  const diasDisponiveis = Array.from({ length: 30 }, (_, i) => addDays(new Date(), i))
     .filter(d => {
       const diaSemana = d.getDay().toString();
       if (!horariosTenant) return d.getDay() !== 0;
@@ -87,7 +87,17 @@ export default function AgendarPage() {
     const diaSemana = parseISO(data).getDay().toString();
     const h = horariosTenant?.[diaSemana];
     if (!h?.aberto) return [];
-    return gerarHorarios(h.inicio, h.fim, intervaloTenant);
+    const slots = gerarHorarios(h.inicio, h.fim, intervaloTenant);
+    // Se for hoje, remove horários que já passaram (+ 30min de folga)
+    const hoje = format(new Date(), "yyyy-MM-dd");
+    if (data === hoje) {
+      const agora = new Date().getHours() * 60 + new Date().getMinutes() + 30;
+      return slots.filter(s => {
+        const [sh, sm] = s.split(":").map(Number);
+        return sh * 60 + sm > agora;
+      });
+    }
+    return slots;
   })() : [];
 
   async function handleConfirmar() {
