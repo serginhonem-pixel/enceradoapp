@@ -10,6 +10,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { LayoutDashboard, ClipboardList, Users, Wrench, BarChart2, LogOut, CalendarDays } from "lucide-react";
 import { useTenant } from "@/hooks/useTenant";
+import { TourGuide } from "@/components/TourGuide";
 
 function getSlugFromUrl(): string {
   if (typeof window === "undefined") return "";
@@ -98,6 +99,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
 
       {/* Bottom navigation mobile */}
       <BottomNav onSignOut={handleSignOut} />
+      <TourGuide />
     </TenantProvider>
   );
 }
@@ -111,18 +113,18 @@ function BottomNav({ onSignOut }: { onSignOut: () => void }) {
   const p = (path: string) => isSub ? path : `${path}?tenant=${tenant?.slug ?? ""}`;
 
   const principais = [
-    { href: "/dashboard",    icon: LayoutDashboard, label: "Início" },
-    { href: "/agenda",       icon: CalendarDays,    label: "Agenda" },
-    { href: "/atendimentos", icon: ClipboardList,   label: "OS" },
-    { href: "/clientes",     icon: Users,           label: "Clientes" },
+    { href: "/dashboard",    icon: LayoutDashboard, label: "Início",   tour: "nav-dashboard"    },
+    { href: "/agenda",       icon: CalendarDays,    label: "Agenda",   tour: "nav-agenda"       },
+    { href: "/atendimentos", icon: ClipboardList,   label: "OS",       tour: "nav-atendimentos" },
+    { href: "/clientes",     icon: Users,           label: "Clientes", tour: "nav-clientes"     },
   ];
 
   const extras = [
-    { href: "/produtos",     icon: "📦", label: "Produtos" },
-    { href: "/custos",       icon: "💲", label: "Custos Fixos" },
-    { href: "/fechamento",   icon: "📊", label: "Fechamento" },
-    { href: "/relatorios",   icon: "📈", label: "Relatórios" },
-    { href: "/configuracoes",icon: "⚙️", label: "Configurações" },
+    { href: "/produtos",      icon: "📦", label: "Produtos",       tour: undefined          },
+    { href: "/custos",        icon: "💲", label: "Custos Fixos",   tour: undefined          },
+    { href: "/fechamento",    icon: "📊", label: "Fechamento",     tour: "nav-fechamento"   },
+    { href: "/relatorios",    icon: "📈", label: "Relatórios",     tour: "nav-relatorios"   },
+    { href: "/configuracoes", icon: "⚙️", label: "Configurações",  tour: "nav-config"       },
   ];
 
   return (
@@ -131,8 +133,8 @@ function BottomNav({ onSignOut }: { onSignOut: () => void }) {
       {maisAberto && (
         <div className="md:hidden fixed inset-0 z-40" onClick={() => setMaisAberto(false)}>
           <div className="absolute bottom-16 left-0 right-0 bg-ink border-t border-white/10 p-3 grid grid-cols-3 gap-2" onClick={e => e.stopPropagation()}>
-            {extras.map(({ href, icon, label }) => (
-              <Link key={href} href={p(href)} onClick={() => setMaisAberto(false)}
+            {extras.map(({ href, icon, label, tour }) => (
+              <Link key={href} href={p(href)} data-tour={tour} onClick={() => setMaisAberto(false)}
                 className="flex flex-col items-center gap-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition">
                 <span className="text-xl">{icon}</span>
                 <span className="text-[0.65rem] text-white/70 font-medium">{label}</span>
@@ -148,10 +150,10 @@ function BottomNav({ onSignOut }: { onSignOut: () => void }) {
       )}
 
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-ink border-t border-white/10 flex">
-        {principais.map(({ href, icon: Icon, label }) => {
+        {principais.map(({ href, icon: Icon, label, tour }) => {
           const active = pathname === href || pathname.startsWith(href + "/");
           return (
-            <Link key={href} href={p(href)} className={`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition ${active ? "text-brand" : "text-white/40"}`}>
+            <Link key={href} href={p(href)} data-tour={tour} className={`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition ${active ? "text-brand" : "text-white/40"}`}>
               <Icon size={20} />
               <span className="text-[0.6rem] font-medium">{label}</span>
             </Link>

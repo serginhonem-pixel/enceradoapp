@@ -9,15 +9,15 @@ import {
 } from "lucide-react";
 
 const nav = [
-  { label: "Dashboard",     href: "/dashboard",    icon: LayoutDashboard },
-  { label: "Agenda",        href: "/agenda",        icon: CalendarDays    },
-  { label: "Atendimentos",  href: "/atendimentos",  icon: ClipboardList   },
-  { label: "Clientes",      href: "/clientes",      icon: Users           },
-  { label: "Serviços",      href: "/servicos",      icon: Wrench          },
-  { label: "Produtos",      href: "/produtos",      icon: Package         },
-  { label: "Custos Fixos",  href: "/custos",        icon: DollarSign      },
-  { label: "Fechamento",    href: "/fechamento",    icon: BarChart2       },
-  { label: "Relatórios",    href: "/relatorios",    icon: History         },
+  { label: "Dashboard",     href: "/dashboard",    icon: LayoutDashboard, tour: "nav-dashboard"     },
+  { label: "Agenda",        href: "/agenda",        icon: CalendarDays,    tour: "nav-agenda"        },
+  { label: "Atendimentos",  href: "/atendimentos",  icon: ClipboardList,   tour: "nav-atendimentos"  },
+  { label: "Clientes",      href: "/clientes",      icon: Users,           tour: "nav-clientes"      },
+  { label: "Serviços",      href: "/servicos",      icon: Wrench,          tour: "nav-servicos"      },
+  { label: "Produtos",      href: "/produtos",      icon: Package,         tour: undefined           },
+  { label: "Custos Fixos",  href: "/custos",        icon: DollarSign,      tour: undefined           },
+  { label: "Fechamento",    href: "/fechamento",    icon: BarChart2,       tour: "nav-fechamento"    },
+  { label: "Relatórios",    href: "/relatorios",    icon: History,         tour: "nav-relatorios"    },
 ];
 
 interface SidebarProps {
@@ -66,12 +66,13 @@ export function Sidebar({ onSignOut }: SidebarProps) {
         <p className="text-[0.6rem] uppercase tracking-widest text-white/20 font-semibold px-2 pt-3 pb-1">
           Menu
         </p>
-        {nav.map(({ label, href: path, icon: Icon }) => {
+        {nav.map(({ label, href: path, icon: Icon, tour }) => {
           const active = pathname === path || pathname.startsWith(path + "/");
           return (
             <Link
               key={path}
               href={href(path)}
+              data-tour={tour}
               className={`flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[0.8rem] font-medium transition-all ${
                 active
                   ? "bg-brand/20 text-white"
@@ -92,6 +93,7 @@ export function Sidebar({ onSignOut }: SidebarProps) {
       <div className="p-3 border-t border-white/[0.07] space-y-1">
         <Link
           href={href("/configuracoes")}
+          data-tour="nav-config"
           className="flex items-center gap-2.5 px-2.5 py-2 rounded-md text-white/35 hover:text-white/70 text-[0.78rem] font-medium transition-all hover:bg-white/[0.05]"
         >
           <Settings size={13} />
