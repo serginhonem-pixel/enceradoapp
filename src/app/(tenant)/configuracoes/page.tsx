@@ -47,8 +47,6 @@ export default function ConfiguracoesPage() {
   const [intervalo, setIntervalo] = useState(30);
   const [saving, setSaving] = useState(false);
   const [savingHorarios, setSavingHorarios] = useState(false);
-  const [linkCurto, setLinkCurto] = useState("");
-  const [encurtando, setEncurtando] = useState(false);
   const [baixandoQR, setBaixandoQR] = useState(false);
 
   async function downloadQRCode() {
@@ -219,38 +217,6 @@ export default function ConfiguracoesPage() {
               Copiar
             </button>
           </div>
-
-          {/* Link curto */}
-          {linkCurto ? (
-            <div className="flex items-center gap-2 mt-3">
-              <input readOnly value={linkCurto}
-                className="flex-1 border border-brand/40 rounded-lg px-3 py-2 text-xs bg-brand/5 outline-none font-semibold text-brand" />
-              <button
-                onClick={() => { navigator.clipboard.writeText(linkCurto); toast.success("Link curto copiado!"); }}
-                className="shrink-0 bg-brand text-black text-xs font-semibold px-3 py-2 rounded-lg hover:bg-brand-dark transition">
-                Copiar
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={async () => {
-                setEncurtando(true);
-                try {
-                  const url = `https://enceradoapp.vercel.app/agendar/${tenant?.slug ?? ""}`;
-                  const res = await fetch("/api/shorten", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url }) });
-                  const { short } = await res.json();
-                  setLinkCurto(short);
-                  navigator.clipboard.writeText(short);
-                  toast.success("Link curto gerado e copiado!");
-                } catch { toast.error("Erro ao encurtar link"); }
-                finally { setEncurtando(false); }
-              }}
-              disabled={encurtando || !tenant}
-              className="mt-2 text-xs text-brand hover:underline font-semibold disabled:opacity-50 flex items-center gap-1"
-            >
-              {encurtando ? "Gerando..." : "✂️ Gerar link curto"}
-            </button>
-          )}
 
           <div className="flex items-start justify-between mt-4 pt-4 border-t border-slate-100">
             <a href={`https://enceradoapp.vercel.app/agendar/${tenant?.slug ?? ""}`} target="_blank" rel="noopener noreferrer"
