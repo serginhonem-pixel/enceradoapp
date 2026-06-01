@@ -59,9 +59,20 @@ export default function AgendaPage() {
   const horariosDisponiveis = (() => {
     const diaSemana = new Date(data + "T12:00:00").getDay().toString();
     const horario = tenant?.horarios?.[diaSemana];
-    if (!horario || !horario.aberto) return [];
+    if (!horario || !horario.aberto) {
+      // Sem configuração: lista padrão das 07:00 às 22:00
+      return gerarSlots("07:00", "22:00", tenant?.intervaloAgendamento ?? 30);
+    }
     return gerarSlots(horario.inicio, horario.fim, tenant?.intervaloAgendamento ?? 30);
   })();
+
+  // Quando os slots disponíveis mudam e o horário atual não está na lista, ajusta para o primeiro disponível
+  useEffect(() => {
+    if (modal && horariosDisponiveis.length > 0 && !horariosDisponiveis.includes(hora)) {
+      setHora(horariosDisponiveis[0]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, tenant]);
 
   function load() {
     if (!tenant) return;
@@ -122,7 +133,16 @@ export default function AgendaPage() {
       }, editando?.id);
       toast.success(editando ? "Agendamento atualizado!" : "Agendamento criado!");
       setModal(false);
-      load();
+      // Atualiza o estado local imediatamente sem esperar o Firestore
+      if (editando) {
+        setAgendamentos(prev => prev.map(ag =>
+          ag.id === editando.id
+            ? { ...ag, hora, data, status, servicoIds, servicoNomes: servicosSel.map(s => s.nome), totalEstimado, observacoes: obs.trim() || "" }
+            : ag
+        ));
+      } else {
+        load();
+      }
     } catch (err) {
       console.error(err);
       toast.error("Erro ao salvar");
