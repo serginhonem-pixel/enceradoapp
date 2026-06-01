@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import type { Produto } from "@/types";
 
 const EMPTY: Omit<Produto, "id" | "tenantId"> = {
-  nome: "", unidade: "un", estoque: 0, estoqueMinimo: 1, precoCusto: 0, ativo: true,
+  nome: "", unidade: "un", estoque: 0, estoqueMinimo: 1, precoCusto: 0, precoVenda: 0, ativo: true,
 };
 
 function fmt(v: number) {
@@ -33,7 +33,7 @@ export default function ProdutosPage() {
   function openNew() { setEditando(null); setForm({ ...EMPTY }); setModal(true); }
   function openEdit(p: Produto) {
     setEditando(p);
-    setForm({ nome: p.nome, unidade: p.unidade, estoque: p.estoque, estoqueMinimo: p.estoqueMinimo, precoCusto: p.precoCusto, ativo: p.ativo });
+    setForm({ nome: p.nome, unidade: p.unidade, estoque: p.estoque, estoqueMinimo: p.estoqueMinimo, precoCusto: p.precoCusto, precoVenda: p.precoVenda ?? 0, ativo: p.ativo });
     setModal(true);
   }
 
@@ -89,6 +89,7 @@ export default function ProdutosPage() {
                   <th className="px-4 py-2.5">Estoque</th>
                   <th className="px-4 py-2.5">Mínimo</th>
                   <th className="px-4 py-2.5">Custo</th>
+                  <th className="px-4 py-2.5">Venda</th>
                   <th className="px-4 py-2.5 w-20" />
                 </tr>
               </thead>
@@ -108,6 +109,9 @@ export default function ProdutosPage() {
                       </td>
                       <td className="px-4 py-3 text-muted">{p.estoqueMinimo}</td>
                       <td className="px-4 py-3 text-slate-600">{fmt(p.precoCusto)}</td>
+                      <td className="px-4 py-3 font-semibold text-emerald-700">
+                        {p.precoVenda ? fmt(p.precoVenda) : <span className="text-slate-300 font-normal">—</span>}
+                      </td>
                       <td className="px-4 py-3">
                         <div className="flex gap-1 justify-end">
                           <button onClick={() => openEdit(p)} className="p-1.5 hover:bg-slate-100 rounded text-slate-400 hover:text-brand transition"><Pencil size={13} /></button>
@@ -139,6 +143,10 @@ export default function ProdutosPage() {
             <div>
               <label className="field-label">Preço de Custo (R$)</label>
               <input className="field-input" type="number" min="0" step="0.01" value={form.precoCusto} onChange={e => setForm(f => ({ ...f, precoCusto: Number(e.target.value) }))} />
+            </div>
+            <div>
+              <label className="field-label">Preço de Venda (R$)</label>
+              <input className="field-input" type="number" min="0" step="0.01" value={form.precoVenda ?? 0} onChange={e => setForm(f => ({ ...f, precoVenda: Number(e.target.value) }))} placeholder="0,00" />
             </div>
             <div>
               <label className="field-label">Estoque Atual</label>

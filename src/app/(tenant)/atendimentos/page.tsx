@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useTenant } from "@/hooks/useTenant";
 import {
   getAtendimentos, saveAtendimento, deleteAtendimento,
-  getClientes, getServicos, getProximoNumeroOS,
+  getClientes, getServicos, getProdutos, getProximoNumeroOS,
 } from "@/lib/firestore";
 import { Topbar } from "@/components/layout/Topbar";
 import { Modal } from "@/components/ui/Modal";
@@ -11,7 +11,7 @@ import { Plus, Pencil, Trash2, CheckCircle2, Clock } from "lucide-react";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { AtendimentoOS, Cliente, Servico, ItemOS } from "@/types";
+import type { AtendimentoOS, Cliente, Servico, Produto, ItemOS } from "@/types";
 
 const STATUS_LABELS: Record<AtendimentoOS["status"], { label: string; cls: string }> = {
   aguardando:   { label: "Aguardando",   cls: "bg-amber-50   text-amber-700"    },
@@ -29,6 +29,7 @@ export default function AtendimentosPage() {
   const [atendimentos, setAtendimentos] = useState<AtendimentoOS[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [servicos, setServicos] = useState<Servico[]>([]);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
   const [data, setData] = useState(format(new Date(), "yyyy-MM-dd"));
   const [modal, setModal] = useState(false);
   const [editando, setEditando] = useState<AtendimentoOS | null>(null);
@@ -36,7 +37,8 @@ export default function AtendimentosPage() {
   // form
   const [clienteId, setClienteId] = useState("");
   const [veiculoIdx, setVeiculoIdx] = useState(0);
-  const [itens, setItens] = useState<ItemOS[]>([]);
+  const [itens, setItens] = useState<ItemOS[]>([]);        // serviços
+  const [produtoQtd, setProdutoQtd] = useState<Record<string, number>>({});
   const [desconto, setDesconto] = useState(0);
   const [pagamento, setPagamento] = useState("dinheiro");
   const [obs, setObs] = useState("");
@@ -52,25 +54,34 @@ export default function AtendimentosPage() {
     if (!tenant) return;
     getClientes(tenant.id).then(setClientes);
     getServicos(tenant.id).then(ss => setServicos(ss.filter(s => s.ativo)));
+    getProdutos(tenant.id).then(ps => setProdutos(ps.filter(p => p.ativo && (p.precoVenda ?? 0) > 0)));
   }, [tenant]);
 
   function openNew() {
     setEditando(null);
-    setClienteId(""); setVeiculoIdx(0); setItens([]); setDesconto(0);
-    setPagamento("dinheiro"); setObs(""); setStatus("aguardando");
+    setClienteId(""); setVeiculoIdx(0); setItens([]); setProdutoQtd({});
+    setDesconto(0); setPagamento("dinheiro"); setObs(""); setStatus("aguardando");
     setModal(true);
   }
 
   function openEdit(a: AtendimentoOS) {
     setEditando(a);
-    setClienteId(a.clienteId); setVeiculoIdx(0); setItens(a.itens);
+    setClienteId(a.clienteId); setVeiculoIdx(0);
+    setItens(a.itens.filter(i => i.tipo !== "produto"));
+    const qtd: Record<string, number> = {};
+    a.itens.filter(i => i.tipo === "produto").forEach(i => { qtd[i.servicoId] = i.quantidade ?? 1; });
+    setProdutoQtd(qtd);
     setDesconto(a.desconto); setPagamento(a.formaPagamento); setObs(a.observacoes ?? "");
     setStatus(a.status);
     setModal(true);
   }
 
   const clienteSelecionado = clientes.find(c => c.id === clienteId);
-  const total = itens.reduce((s, i) => s + i.preco, 0);
+  const totalServicos = itens.reduce((s, i) => s + i.preco, 0);
+  const totalProdutos = produtos
+    .filter(p => (produtoQtd[p.id] ?? 0) > 0)
+    .reduce((s, p) => s + (p.precoVenda ?? 0) * (produtoQtd[p.id] ?? 0), 0);
+  const total = totalServicos + totalProdutos;
   const totalFinal = Math.max(0, total - desconto);
 
   function addServico(s: Servico) {
@@ -87,6 +98,17 @@ export default function AtendimentosPage() {
     try {
       const veiculo = clienteSelecionado.veiculos[veiculoIdx] ?? clienteSelecionado.veiculos[0];
       const numero = editando?.numero ?? await getProximoNumeroOS(tenant.id);
+      const itensProduto: ItemOS[] = produtos
+        .filter(p => (produtoQtd[p.id] ?? 0) > 0)
+        .map(p => ({
+          servicoId: p.id,
+          servicoNome: p.nome,
+          preco: p.precoVenda ?? 0,
+          tipo: "produto" as const,
+          quantidade: produtoQtd[p.id],
+        }));
+      const allItens = [...itens, ...itensProduto];
+
       await saveAtendimento(tenant.id, {
         numero,
         clienteId: clienteSelecionado.id,
@@ -94,7 +116,7 @@ export default function AtendimentosPage() {
         veiculoPlaca: veiculo?.placa ?? "-",
         veiculoModelo: veiculo?.modelo ?? "-",
         veiculoCor: veiculo?.cor ?? "-",
-        itens,
+        itens: allItens,
         total,
         desconto,
         totalFinal,
@@ -227,7 +249,7 @@ export default function AtendimentosPage() {
           {/* Serviços */}
           <div>
             <label className="field-label">Serviços</label>
-            <div className="flex flex-wrap gap-1.5 mb-2">
+            <div className="flex flex-wrap gap-1.5">
               {servicos.map(s => (
                 <button key={s.id} type="button" onClick={() => addServico(s)}
                   className="text-xs bg-brand/10 text-brand hover:bg-brand/20 px-2.5 py-1 rounded-full font-medium transition">
@@ -235,23 +257,59 @@ export default function AtendimentosPage() {
                 </button>
               ))}
             </div>
-            {itens.length > 0 && (
-              <div className="bg-slate-50 rounded-lg p-2 space-y-1">
-                {itens.map((item, i) => (
-                  <div key={i} className="flex items-center justify-between text-sm px-2">
-                    <span className="text-ink">{item.servicoNome}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-emerald-700">{fmt(item.preco)}</span>
-                      <button onClick={() => removeItem(i)} className="text-red-400 hover:text-red-600 text-xs">✕</button>
-                    </div>
-                  </div>
-                ))}
-                <div className="border-t border-slate-200 pt-1 px-2 flex justify-between font-semibold text-sm">
-                  <span>Subtotal</span><span>{fmt(total)}</span>
-                </div>
-              </div>
-            )}
           </div>
+
+          {/* Produtos avulsos */}
+          {produtos.length > 0 && (
+            <div>
+              <label className="field-label">Produtos avulsos</label>
+              <div className="space-y-1.5">
+                {produtos.map(p => {
+                  const qty = produtoQtd[p.id] ?? 0;
+                  return (
+                    <div key={p.id} className={`flex items-center justify-between rounded-lg border px-3 py-2 transition ${qty > 0 ? "border-brand/40 bg-brand/5" : "border-slate-200"}`}>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-ink">{p.nome}</span>
+                        <span className="text-xs text-muted ml-2">{fmt(p.precoVenda ?? 0)}/{p.unidade}</span>
+                        {qty > 0 && <span className="text-xs font-semibold text-brand ml-2">= {fmt((p.precoVenda ?? 0) * qty)}</span>}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button type="button" onClick={() => setProdutoQtd(q => ({ ...q, [p.id]: Math.max(0, (q[p.id] ?? 0) - 1) }))}
+                          className="w-6 h-6 rounded-full border border-slate-300 text-slate-500 hover:border-red-400 hover:text-red-500 text-sm font-bold flex items-center justify-center transition">−</button>
+                        <span className="w-5 text-center text-sm font-semibold text-ink">{qty}</span>
+                        <button type="button" onClick={() => setProdutoQtd(q => ({ ...q, [p.id]: (q[p.id] ?? 0) + 1 }))}
+                          className="w-6 h-6 rounded-full border border-slate-300 text-slate-500 hover:border-brand hover:text-brand text-sm font-bold flex items-center justify-center transition">+</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Resumo de itens */}
+          {(itens.length > 0 || Object.values(produtoQtd).some(q => q > 0)) && (
+            <div className="bg-slate-50 rounded-lg p-2 space-y-1">
+              {itens.map((item, i) => (
+                <div key={i} className="flex items-center justify-between text-sm px-2">
+                  <span className="text-ink">{item.servicoNome}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-emerald-700">{fmt(item.preco)}</span>
+                    <button onClick={() => removeItem(i)} className="text-red-400 hover:text-red-600 text-xs">✕</button>
+                  </div>
+                </div>
+              ))}
+              {produtos.filter(p => (produtoQtd[p.id] ?? 0) > 0).map(p => (
+                <div key={p.id} className="flex items-center justify-between text-sm px-2">
+                  <span className="text-ink">{p.nome} ×{produtoQtd[p.id]}</span>
+                  <span className="font-semibold text-emerald-700">{fmt((p.precoVenda ?? 0) * produtoQtd[p.id])}</span>
+                </div>
+              ))}
+              <div className="border-t border-slate-200 pt-1 px-2 flex justify-between font-semibold text-sm">
+                <span>Subtotal</span><span>{fmt(total)}</span>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-3 gap-3">
             <div>

@@ -84,6 +84,7 @@ export interface Produto {
   estoque: number;
   estoqueMinimo: number;
   precoCusto: number;
+  precoVenda?: number;  // preço de venda avulsa
   ativo: boolean;
 }
 
@@ -103,7 +104,9 @@ export type StatusOS = "aguardando" | "em_andamento" | "concluido" | "cancelado"
 export interface ItemOS {
   servicoId: string;
   servicoNome: string;
-  preco: number;
+  preco: number;           // preço unitário
+  tipo?: "servico" | "produto";
+  quantidade?: number;     // padrão 1
 }
 
 export interface AtendimentoOS {
