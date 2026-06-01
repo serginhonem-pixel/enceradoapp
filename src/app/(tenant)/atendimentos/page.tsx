@@ -349,7 +349,7 @@ export default function AtendimentosPage() {
 
           <div className="flex gap-2 pt-2 border-t border-slate-100">
             <button onClick={() => setModal(false)} className="flex-1 border border-slate-200 text-sm text-slate-600 py-2 rounded-lg hover:bg-slate-50 transition font-medium">Cancelar</button>
-            <button onClick={handleSave} disabled={saving || !clienteId || itens.length === 0} className="flex-1 bg-brand text-white text-sm py-2 rounded-lg hover:bg-brand-dark transition font-semibold disabled:opacity-60">
+            <button onClick={handleSave} disabled={saving || !clienteId || (itens.length === 0 && !Object.values(produtoQtd).some(q => q > 0))} className="flex-1 bg-brand text-white text-sm py-2 rounded-lg hover:bg-brand-dark transition font-semibold disabled:opacity-60">
               {saving ? "Salvando..." : "Salvar OS"}
             </button>
           </div>
