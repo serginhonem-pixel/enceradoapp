@@ -1,6 +1,9 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { getUserTenant } from "@/lib/firestore";
 
 const NAV_LINKS = [
   { label: "Benefícios", href: "#beneficios" },
@@ -80,6 +83,15 @@ const DASHBOARD_SCREENS = [
 export default function LandingPage() {
   const [activeScreen, setActiveScreen] = useState(0);
   const [scrolled, setScrolled] = useState(false);
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading || !user) return;
+    getUserTenant(user.uid).then((tenant) => {
+      if (tenant) router.replace(`/dashboard?tenant=${tenant.slug}`);
+    });
+  }, [user, loading, router]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);

@@ -1,5 +1,5 @@
 import {
-  collection, doc, getDocs, getDoc, addDoc, updateDoc,
+  collection, doc, getDocs, getDoc, addDoc, updateDoc, setDoc,
   deleteDoc, query, where, orderBy, limit, Timestamp,
   onSnapshot, QuerySnapshot, DocumentData, writeBatch,
 } from "firebase/firestore";
@@ -54,16 +54,13 @@ export async function updateTenant(id: string, data: Partial<Tenant>) {
 }
 
 export async function saveUserTenant(userId: string, tenantId: string) {
-  await updateDoc(doc(requireDb(), "users", userId), { tenantId }).catch(async () => {
-    await addDoc(collection(requireDb(), "users"), { userId, tenantId });
-  });
+  await setDoc(doc(requireDb(), "users", userId), { tenantId });
 }
 
 export async function getUserTenant(userId: string): Promise<Tenant | null> {
-  const q = query(collection(requireDb(), "users"), where("userId", "==", userId));
-  const snap = await getDocs(q);
-  if (snap.empty) return null;
-  const tenantId = snap.docs[0].data().tenantId as string;
+  const snap = await getDoc(doc(requireDb(), "users", userId));
+  if (!snap.exists()) return null;
+  const tenantId = snap.data().tenantId as string;
   return getTenant(tenantId);
 }
 
