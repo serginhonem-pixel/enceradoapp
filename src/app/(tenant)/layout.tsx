@@ -30,7 +30,26 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
   const router = useRouter();
   const [slug, setSlug] = useState("");
   const [slugLoading, setSlugLoading] = useState(true);
+  const [slugError, setSlugError] = useState(false);
   const [mobileSidebar, setMobileSidebar] = useState(false);
+
+  function buscarTenant(uid: string) {
+    setSlugError(false);
+    setSlugLoading(true);
+    getUserTenant(uid)
+      .then((tenant) => {
+        if (tenant) {
+          setSlug(tenant.slug);
+        } else {
+          router.replace("/onboarding");
+        }
+        setSlugLoading(false);
+      })
+      .catch(() => {
+        setSlugError(true);
+        setSlugLoading(false);
+      });
+  }
 
   useEffect(() => {
     if (!loading && !user) { router.replace("/login"); return; }
@@ -42,15 +61,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
       setSlugLoading(false);
       return;
     }
-    // busca o tenant do usuário no Firestore
-    getUserTenant(user.uid).then((tenant) => {
-      if (tenant) {
-        setSlug(tenant.slug);
-      } else {
-        router.replace("/onboarding");
-      }
-      setSlugLoading(false);
-    });
+    buscarTenant(user.uid);
   }, [user, loading, router]);
 
   useEffect(() => {
@@ -62,10 +73,26 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
     router.replace("/login");
   }
 
-  if (loading) {
+  if (loading || slugLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (slugError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center space-y-3">
+          <p className="text-sm text-slate-600">Erro ao carregar seus dados. Verifique sua conexão.</p>
+          <button
+            onClick={() => user && buscarTenant(user.uid)}
+            className="text-sm bg-brand text-white font-semibold px-4 py-2 rounded-lg hover:bg-brand-dark transition"
+          >
+            Tentar novamente
+          </button>
+        </div>
       </div>
     );
   }
