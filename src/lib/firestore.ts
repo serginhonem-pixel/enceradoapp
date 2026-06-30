@@ -58,10 +58,16 @@ export async function saveUserTenant(userId: string, tenantId: string) {
 }
 
 export async function getUserTenant(userId: string): Promise<Tenant | null> {
+  // Tenta estrutura nova (ID do documento = userId)
   const snap = await getDoc(doc(requireDb(), "users", userId));
-  if (!snap.exists()) return null;
-  const tenantId = snap.data().tenantId as string;
-  return getTenant(tenantId);
+  if (snap.exists()) {
+    return getTenant(snap.data().tenantId as string);
+  }
+  // Fallback: estrutura antiga (campo userId dentro do documento)
+  const q = query(collection(requireDb(), "users"), where("userId", "==", userId));
+  const qsnap = await getDocs(q);
+  if (qsnap.empty) return null;
+  return getTenant(qsnap.docs[0].data().tenantId as string);
 }
 
 // ─── CLIENTES ────────────────────────────────────────────────────────────────
