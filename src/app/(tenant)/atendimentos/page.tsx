@@ -44,6 +44,23 @@ export default function AtendimentosPage() {
   const [obs, setObs] = useState("");
   const [status, setStatus] = useState<AtendimentoOS["status"]>("aguardando");
   const [saving, setSaving] = useState(false);
+  const [buscaPlaca, setBuscaPlaca] = useState("");
+
+  function buscarPorPlaca() {
+    const placa = buscaPlaca.trim().toUpperCase();
+    if (!placa) return;
+    for (const c of clientes) {
+      const vi = c.veiculos.findIndex(v => v.placa.toUpperCase() === placa);
+      if (vi >= 0) {
+        setClienteId(c.id);
+        setVeiculoIdx(vi);
+        setBuscaPlaca("");
+        toast.success(`Cliente: ${c.nome}`);
+        return;
+      }
+    }
+    toast.error("Placa não encontrada");
+  }
 
   function load() {
     if (!tenant) return;
@@ -61,6 +78,7 @@ export default function AtendimentosPage() {
     setEditando(null);
     setClienteId(""); setVeiculoIdx(0); setItens([]); setProdutoQtd({});
     setDesconto(0); setPagamento("dinheiro"); setObs(""); setStatus("aguardando");
+    setBuscaPlaca("");
     setModal(true);
   }
 
@@ -225,6 +243,24 @@ export default function AtendimentosPage() {
       {/* Modal OS */}
       <Modal open={modal} onClose={() => setModal(false)} title={editando ? `Editar OS #${String(editando.numero).padStart(4,"0")}` : "Nova OS"} size="lg">
         <div className="space-y-4">
+          {/* Busca por placa */}
+          <div>
+            <label className="field-label">Buscar por placa</label>
+            <div className="flex gap-2">
+              <input
+                className="field-input"
+                placeholder="ABC-1234"
+                value={buscaPlaca}
+                onChange={e => setBuscaPlaca(e.target.value.toUpperCase())}
+                onKeyDown={e => e.key === "Enter" && buscarPorPlaca()}
+              />
+              <button type="button" onClick={buscarPorPlaca}
+                className="shrink-0 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 rounded-lg transition">
+                Buscar
+              </button>
+            </div>
+          </div>
+
           {/* Cliente */}
           <div>
             <label className="field-label">Cliente *</label>

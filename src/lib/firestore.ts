@@ -165,6 +165,16 @@ export async function getAtendimentos(tenantId: string, dataStr?: string): Promi
   return all.filter(a => toDateStr(a.createdAt) === dataStr);
 }
 
+export async function getAtendimentosByCliente(tenantId: string, clienteId: string): Promise<AtendimentoOS[]> {
+  const snap = await getDocs(query(col(tenantId, "atendimentos"), where("clienteId", "==", clienteId)));
+  return snap.docs.map(d => ({
+    id: d.id, ...d.data(),
+    createdAt: fromTimestamp(d.data().createdAt),
+    updatedAt: fromTimestamp(d.data().updatedAt),
+    concluidoAt: d.data().concluidoAt ? fromTimestamp(d.data().concluidoAt) : undefined,
+  })) as AtendimentoOS[];
+}
+
 export async function getAtendimentosPorPeriodo(tenantId: string, inicio: Date, fim: Date): Promise<AtendimentoOS[]> {
   const q = query(
     col(tenantId, "atendimentos"),
