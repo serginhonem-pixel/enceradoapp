@@ -42,8 +42,8 @@ export function Sidebar({ onSignOut }: SidebarProps) {
     <aside className="w-56 bg-ink flex flex-col sticky top-0 h-screen overflow-y-auto shrink-0">
       {/* Logo */}
       <div className="p-4 border-b border-white/[0.07] flex flex-col items-center">
-        <div className="w-20 h-20 rounded-xl overflow-hidden">
-          <Image src={tenant?.logoUrl || "/logo.jpeg"} alt="logo" width={80} height={80} className="object-cover w-full h-full" />
+        <div className="w-32 h-32 rounded-xl overflow-hidden">
+          <Image src={tenant?.logoUrl || "/logo.jpeg"} alt="logo" width={128} height={128} className="object-cover w-full h-full" />
         </div>
         <p className="text-[0.65rem] text-white/25 mt-2 uppercase tracking-widest font-semibold">
           {new Date().toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}
