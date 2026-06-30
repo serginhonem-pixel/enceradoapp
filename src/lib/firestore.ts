@@ -28,7 +28,7 @@ function fromTimestamp(v: unknown): Date {
 
 // ─── TENANT ─────────────────────────────────────────────────────────────────
 export async function getTenantBySlug(slug: string): Promise<Tenant | null> {
-  const q = query(collection(requireDb(), "tenants"), where("slug", "==", slug));
+  const q = query(collection(requireDb(), "tenants"), where("slug", "==", slug.toLowerCase()));
   const snap = await getDocs(q);
   if (snap.empty) return null;
   const d = snap.docs[0];

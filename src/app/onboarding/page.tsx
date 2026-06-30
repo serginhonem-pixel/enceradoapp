@@ -26,7 +26,7 @@ export default function OnboardingPage() {
     if (!nomeEmpresa.trim()) { toast.error("Informe o nome do lava jato"); return; }
     setLoading(true);
     try {
-      const slug = slugify(nomeEmpresa) || `lavaapp-${Date.now()}`;
+      const slug = (slugify(nomeEmpresa) || `lavaapp-${Date.now()}`).toLowerCase();
       const tenantId = await createTenant({
         slug,
         nome: nomeEmpresa.trim(),
